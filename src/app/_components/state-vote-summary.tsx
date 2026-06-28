@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
+import houseMemberOpenSecretsIds from "@/data/houseMemberOpenSecretsIds.json";
 import { interpretVote } from "@/data/interpretVote";
 import { memberFullNamesById } from "@/data/memberNames";
 import { getRegionName, usRegions } from "@/data/states";
@@ -11,6 +12,8 @@ import styles from "../page.module.css";
 const DETECTED_STATE_COOKIE = "detected_state";
 const SELECTED_STATE_STORAGE_KEY = "selected_state";
 const voteRecordsById: Record<string, MemberVoteRecord[]> = memberVotesByVoteId;
+const openSecretsIdsByMemberId: Record<string, string> =
+  houseMemberOpenSecretsIds;
 const IMPEACHMENT_SUPPORT = "Voted to advance impeachment";
 
 function CheckIcon() {
@@ -160,6 +163,7 @@ export function StateVoteSummary() {
                             <th scope="col">Party</th>
                             <th scope="col">Official vote</th>
                             <th scope="col">Helped impeachment move forward?</th>
+                            <th scope="col">Donors</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -172,6 +176,11 @@ export function StateVoteSummary() {
                             const memberName =
                               memberFullNamesById[memberVote.memberId] ??
                               memberVote.name;
+                            const mpid =
+                              openSecretsIdsByMemberId[memberVote.memberId];
+                            const openSecretsUrl = mpid
+                              ? `https://www.opensecrets.org/profiles/_/us_congress/organizations?mpid=${mpid}`
+                              : "";
 
                             return (
                               <tr
@@ -182,15 +191,36 @@ export function StateVoteSummary() {
                                 }
                                 key={`${vote.id}-${memberVote.memberId}`}
                               >
-                                <td>{memberName}</td>
-                                <td>{getPosition(vote.chamber)}</td>
-                                <td>{memberVote.party}</td>
-                                <td>{memberVote.rawVote}</td>
-                                <td>
+                                <td data-label="Member">{memberName}</td>
+                                <td data-label="Position">
+                                  {getPosition(vote.chamber)}
+                                </td>
+                                <td data-label="Party">{memberVote.party}</td>
+                                <td data-label="Official vote">
+                                  {memberVote.rawVote}
+                                </td>
+                                <td data-label="Helped impeachment move forward?">
                                   <span className={styles.impeachStatus}>
                                     {votedToImpeach ? <CheckIcon /> : <XIcon />}
                                     {votedToImpeach ? "Yes" : "No"}
                                   </span>
+                                </td>
+                                <td data-label="Donors">
+                                  {openSecretsUrl ? (
+                                    <a
+                                      aria-label={`View funding sources for ${memberName} on OpenSecrets`}
+                                      className={styles.donorLink}
+                                      href={openSecretsUrl}
+                                      rel="noopener noreferrer"
+                                      target="_blank"
+                                    >
+                                      Funding sources
+                                    </a>
+                                  ) : (
+                                    <span className={styles.unavailable}>
+                                      Not listed
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
                             );

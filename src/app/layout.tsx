@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trump Impeachment Vote Tracker",
+  title: "Track efforts to impeach Trump",
   description:
-    "A source-driven guide to U.S. House impeachment-related roll-call votes.",
+    "See which House members helped impeachment move forward, who blocked it, and where your representatives stood.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer className="siteFooter">
+          <p>
+            Data may be inaccurate or incomplete. Not affiliated with any
+            government agency, elected official, campaign, party, or political
+            committee. Vote data is based on official House Clerk roll-call
+            records linked on this site. Please verify all records against the
+            official source.
+          </p>
+        </footer>
+      </body>
     </html>
   );
 }
