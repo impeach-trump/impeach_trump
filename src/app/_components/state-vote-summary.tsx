@@ -389,7 +389,9 @@ export function StateVoteSummary() {
     <section className={styles.section} aria-labelledby="contact-rep-cta">
       <div className={styles.lookupHeader}>
         <h2 className={styles.lookupCta} id="contact-rep-cta">
-          How to contact your rep about impeaching Trump in under 5 minutes
+          <span className={styles.lookupCtaText}>
+            How to contact your rep about impeaching Trump in under 5 minutes
+          </span>
         </h2>
       </div>
 

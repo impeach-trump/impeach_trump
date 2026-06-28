@@ -191,6 +191,10 @@
   line-height: 1.08;
 }
 
+.lookupCtaText {
+  overflow-wrap: anywhere;
+}
+
 .zipLookupText h2 {
   display: inline-flex;
   align-items: center;
