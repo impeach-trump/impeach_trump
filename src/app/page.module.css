@@ -1,5 +1,5 @@
 .page {
-  width: min(100%, 960px);
+  width: min(100%, 1100px);
   margin: 0 auto;
   padding: 64px 24px;
 }
@@ -24,11 +24,11 @@
   text-transform: uppercase;
 }
 
-.hero h1 {
+.siteTitle {
   max-width: 720px;
   color: var(--foreground);
-  font-size: 3rem;
-  line-height: 1.08;
+  font-size: 1.35rem;
+  line-height: 1.2;
   font-weight: 800;
 }
 
@@ -74,6 +74,10 @@
 
 .ctaButton,
 .ctaLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid var(--border);
@@ -99,10 +103,36 @@
   text-decoration-thickness: 2px;
 }
 
+.buttonIcon,
+.headingIcon,
+.inlineIcon,
+.linkIcon {
+  flex: 0 0 auto;
+  width: 1.1em;
+  height: 1.1em;
+  stroke-width: 2.2;
+}
+
+.headingIcon {
+  color: var(--link);
+}
+
+.inlineIcon {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: -0.15em;
+}
+
+.linkIcon {
+  width: 1em;
+  height: 1em;
+}
+
 .stateSelect {
   display: grid;
   gap: 8px;
   min-width: 220px;
+  width: min(100%, 340px);
   color: var(--foreground);
   font-size: 0.9rem;
   font-weight: 700;
@@ -136,14 +166,50 @@
 
 .zipLookup {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
 }
 
 .zipLookupText {
   display: grid;
+  justify-items: start;
   gap: 6px;
+  text-align: left;
+}
+
+.lookupHeader {
+  display: grid;
+  gap: 8px;
+}
+
+.lookupCta {
+  max-width: 780px;
+  color: #143f67;
+  font-size: 2.75rem;
+  font-weight: 900;
+  line-height: 1.08;
+}
+
+.zipLookupText h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.officialLookupLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--link);
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.officialLookupLink:hover {
+  text-decoration-thickness: 2px;
 }
 
 .zipLookupText p {
@@ -181,6 +247,10 @@
 }
 
 .zipLookupButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid var(--border);
@@ -306,17 +376,6 @@
   text-decoration-thickness: 2px;
 }
 
-.emailIcon {
-  flex: 0 0 auto;
-  width: 1.2em;
-  height: 1.2em;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
 .copyTemplate {
   display: grid;
   gap: 14px;
@@ -388,6 +447,10 @@
 }
 
 .copyTemplateButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid #143f67;
@@ -417,9 +480,7 @@
 }
 
 .statePanelHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  display: grid;
   gap: 20px;
 }
 
@@ -460,17 +521,54 @@
 
 .memberTable {
   width: 100%;
-  min-width: 980px;
+  min-width: 0;
   border-collapse: collapse;
   font-size: 0.95rem;
+  table-layout: fixed;
 }
 
 .memberTable th,
 .memberTable td {
   padding: 10px 8px;
   border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
   text-align: left;
   vertical-align: top;
+}
+
+.memberTable th:nth-child(1),
+.memberTable td:nth-child(1) {
+  width: 19%;
+}
+
+.memberTable th:nth-child(2),
+.memberTable td:nth-child(2) {
+  width: 12%;
+}
+
+.memberTable th:nth-child(3),
+.memberTable td:nth-child(3) {
+  width: 9%;
+}
+
+.memberTable th:nth-child(4),
+.memberTable td:nth-child(4) {
+  width: 7%;
+}
+
+.memberTable th:nth-child(5),
+.memberTable td:nth-child(5) {
+  width: 11%;
+}
+
+.memberTable th:nth-child(6),
+.memberTable td:nth-child(6) {
+  width: 24%;
+}
+
+.memberTable th:nth-child(7),
+.memberTable td:nth-child(7) {
+  width: 18%;
 }
 
 .memberTable th {
@@ -528,9 +626,12 @@
 
 .contactLink,
 .donorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--link);
   font-weight: 800;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .contactLink:hover,
@@ -540,10 +641,9 @@
 
 .unavailable {
   color: var(--muted);
-  white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1040px) {
   .tableWrap {
     overflow-x: visible;
   }
@@ -567,6 +667,11 @@
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 8px;
+  }
+
+  .memberTable th:nth-child(n),
+  .memberTable td:nth-child(n) {
+    width: auto;
   }
 
   .memberTable td {
@@ -596,8 +701,8 @@
     padding: 40px 18px;
   }
 
-  .hero h1 {
-    font-size: 2.125rem;
+  .lookupCta {
+    font-size: 2rem;
   }
 
   .sectionHeader,

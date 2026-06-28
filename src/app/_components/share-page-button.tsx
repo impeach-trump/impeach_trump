@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Share2 } from "lucide-react";
 import { useState } from "react";
 import styles from "../page.module.css";
 
@@ -32,6 +33,11 @@ export function SharePageButton() {
 
   return (
     <button className={styles.ctaButton} onClick={handleShare} type="button">
+      {copied ? (
+        <Check aria-hidden="true" className={styles.buttonIcon} />
+      ) : (
+        <Share2 aria-hidden="true" className={styles.buttonIcon} />
+      )}
       {copied ? "Link copied" : "Share this page"}
     </button>
   );

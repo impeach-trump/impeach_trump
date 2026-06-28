@@ -1,6 +1,15 @@
 "use client";
 
 import {
+  Check,
+  Copy,
+  ExternalLink,
+  Mail,
+  MapPin,
+  Search,
+  X,
+} from "lucide-react";
+import {
   type FormEvent,
   useMemo,
   useState,
@@ -21,9 +30,62 @@ const voteRecordsById: Record<string, MemberVoteRecord[]> = memberVotesByVoteId;
 const openSecretsIdsByMemberId: Record<string, string> =
   houseMemberOpenSecretsIds;
 const IMPEACHMENT_SUPPORT = "Voted to advance impeachment";
+const STATE_BY_GEOID_PREFIX: Record<string, string> = {
+  "01": "AL",
+  "02": "AK",
+  "04": "AZ",
+  "05": "AR",
+  "06": "CA",
+  "08": "CO",
+  "09": "CT",
+  "10": "DE",
+  "11": "DC",
+  "12": "FL",
+  "13": "GA",
+  "15": "HI",
+  "16": "ID",
+  "17": "IL",
+  "18": "IN",
+  "19": "IA",
+  "20": "KS",
+  "21": "KY",
+  "22": "LA",
+  "23": "ME",
+  "24": "MD",
+  "25": "MA",
+  "26": "MI",
+  "27": "MN",
+  "28": "MS",
+  "29": "MO",
+  "30": "MT",
+  "31": "NE",
+  "32": "NV",
+  "33": "NH",
+  "34": "NJ",
+  "35": "NM",
+  "36": "NY",
+  "37": "NC",
+  "38": "ND",
+  "39": "OH",
+  "40": "OK",
+  "41": "OR",
+  "42": "PA",
+  "44": "RI",
+  "45": "SC",
+  "46": "SD",
+  "47": "TN",
+  "48": "TX",
+  "49": "UT",
+  "50": "VT",
+  "51": "VA",
+  "53": "WA",
+  "54": "WV",
+  "55": "WI",
+  "56": "WY",
+};
 const OFFICIAL_REPRESENTATIVE_LOOKUP_URL =
   "https://www.house.gov/representatives/find-your-representative";
-const REPRESENTATIVE_EMAIL_TEMPLATE = [
+const ACCOUNTABILITY_REPRESENTATIVE_EMAIL_TEMPLATE = [
   `I\u2019m a constituent in your district, and I am absolutely disappointed\u2014and frankly angry\u2014about your vote on Roll Call 175 / H. Res. 537. By voting to table the resolution, you actively helped block the impeachment process from moving forward. It is a joke that Donald Trump has not been held fully accountable by this body. Hiding behind a procedural vote to shut this down instead of facing it head-on is cowardly.`,
   `The legal and constitutional grounds for his impeachment are overwhelming. We are talking about severe, documented violations of his oath of office, including:`,
   `Abuse of Power: Repeatedly weaponizing the presidency for personal and political gain, including pressuring government officials to interfere in our democratic processes.`,
@@ -31,6 +93,13 @@ const REPRESENTATIVE_EMAIL_TEMPLATE = [
   `Subversion of Democracy: Actively attempting to overturn lawful election results and inciting efforts to disrupt the peaceful transfer of power.`,
   `Constitutional Violations: Flagrantly ignoring the Emoluments Clause and profiting off the office of the presidency.`,
   `None of these are trivial political disagreements\u2014they are the textbook definition of "high crimes and misdemeanors." I want Donald Trump impeached. I expect Congress to take constitutional accountability seriously instead of shutting it down procedurally to protect him. Your job is to defend the Constitution, not play political defense. I pay attention to how you vote, and I will be remembering Roll Call 175 at the ballot box. I expect a real explanation for this vote, not a canned newsletter response.`,
+].join("\n\n");
+const SUPPORTIVE_REPRESENTATIVE_EMAIL_TEMPLATE = [
+  `I\u2019m a constituent in your district, and I\u2019m writing to thank you for doing the right thing on Roll Call 175 / H. Res. 537. I appreciate that you voted to let the impeachment process move forward rather than hiding behind a procedural vote to shut it down.`,
+  `However, we can't stop just because that attempt was blocked. It\u2019s an absolute joke that Donald Trump still hasn't been impeached despite his clear abuses of power and constitutional violations.`,
+  `I am urging you to take the lead and introduce a new resolution for Articles of Impeachment. Don\u2019t wait for someone else to do it. We need representatives who will force this issue back onto the floor and keep fighting until there is real accountability.`,
+  `I pay close attention to what you do in Congress, and stepping up to lead on this will absolutely earn my continued support at the ballot box.`,
+  `I\u2019d like to know if you plan to introduce or co-sponsor a new impeachment resolution.`,
 ].join("\n\n");
 
 type PossibleRepresentative = {
@@ -128,43 +197,29 @@ function getLatestRepresentativeVoteStatus(
   return null;
 }
 
-function CheckIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className={styles.impeachIcon}
-      focusable="false"
-      viewBox="0 0 20 20"
-    >
-      <path d="m5 10 3 3 7-7" />
-    </svg>
+function getRepresentativeState(representative: PossibleRepresentative) {
+  const representativeKey = getRepresentativeContactKey(
+    representative.name,
+    representative.party,
   );
-}
 
-function XIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className={styles.impeachIcon}
-      focusable="false"
-      viewBox="0 0 20 20"
-    >
-      <path d="m6 6 8 8M14 6l-8 8" />
-    </svg>
-  );
-}
+  for (const voteRecords of Object.values(voteRecordsById)) {
+    const memberVote = voteRecords.find(
+      (voteRecord) =>
+        getRepresentativeContactKey(
+          memberFullNamesById[voteRecord.memberId] ?? voteRecord.name,
+          voteRecord.party,
+        ) === representativeKey,
+    );
 
-function EmailIcon() {
+    if (memberVote) {
+      return memberVote.state;
+    }
+  }
+
   return (
-    <svg
-      aria-hidden="true"
-      className={styles.emailIcon}
-      focusable="false"
-      viewBox="0 0 20 20"
-    >
-      <path d="M3.5 5.5h13v9h-13z" />
-      <path d="m4 6 6 5 6-5" />
-    </svg>
+    STATE_BY_GEOID_PREFIX[representative.geoid.padStart(4, "0").slice(0, 2)] ??
+    ""
   );
 }
 
@@ -229,6 +284,9 @@ export function StateVoteSummary() {
           : styles.representativeCardNegative
       }`
     : styles.representativeCard;
+  const representativeEmailTemplate = representativeHelpedImpeachment
+    ? SUPPORTIVE_REPRESENTATIVE_EMAIL_TEMPLATE
+    : ACCOUNTABILITY_REPRESENTATIVE_EMAIL_TEMPLATE;
 
   const selectedStateName = selectedState ? getRegionName(selectedState) : "";
 
@@ -246,6 +304,10 @@ export function StateVoteSummary() {
   }, [selectedState]);
 
   function handleStateChange(value: string) {
+    selectState(value);
+  }
+
+  function selectState(value: string) {
     setChosenState(value);
 
     if (value) {
@@ -291,8 +353,14 @@ export function StateVoteSummary() {
       setManualRepresentative({
         ...result.representative,
       });
+      const representativeState = getRepresentativeState(result.representative);
+
+      if (representativeState) {
+        selectState(representativeState);
+      }
+
       setShowOfficialZipLookupLink(false);
-      setZipLookupMessage(`Showing possible representative for ZIP ${zipCode}.`);
+      setZipLookupMessage("");
     } catch {
       setManualRepresentative(null);
       setZipLookupHasError(true);
@@ -310,7 +378,7 @@ export function StateVoteSummary() {
     }
 
     try {
-      await navigator.clipboard.writeText(REPRESENTATIVE_EMAIL_TEMPLATE);
+      await navigator.clipboard.writeText(representativeEmailTemplate);
       setCopyTemplateStatus("Template copied.");
     } catch {
       setCopyTemplateStatus("Copy failed.");
@@ -318,14 +386,29 @@ export function StateVoteSummary() {
   }
 
   return (
-    <section className={styles.section} aria-labelledby="representative-lookup">
+    <section className={styles.section} aria-labelledby="contact-rep-cta">
+      <div className={styles.lookupHeader}>
+        <h2 className={styles.lookupCta} id="contact-rep-cta">
+          How to contact your rep about impeaching Trump in under 5 minutes
+        </h2>
+      </div>
+
       <div className={styles.zipLookupCard}>
         <div className={styles.zipLookup}>
           <div className={styles.zipLookupText}>
-            <h2 id="representative-lookup">Find your House representative</h2>
-            <p>
-              Enter your ZIP code to look up a possible House representative.
-            </p>
+            <h2 id="representative-lookup">
+              <MapPin aria-hidden="true" className={styles.headingIcon} />
+              Find your House representative
+            </h2>
+            <a
+              className={styles.officialLookupLink}
+              href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Official search tool
+              <ExternalLink aria-hidden="true" className={styles.inlineIcon} />
+            </a>
           </div>
 
           <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
@@ -350,6 +433,7 @@ export function StateVoteSummary() {
               disabled={isLookingUpZip}
               type="submit"
             >
+              <Search aria-hidden="true" className={styles.buttonIcon} />
               {isLookingUpZip ? "Looking up..." : "Look up"}
             </button>
 
@@ -373,6 +457,10 @@ export function StateVoteSummary() {
                       target="_blank"
                     >
                       official House lookup
+                      <ExternalLink
+                        aria-hidden="true"
+                        className={styles.inlineIcon}
+                      />
                     </a>
                     .
                   </>
@@ -387,88 +475,86 @@ export function StateVoteSummary() {
             className={representativeCardClassName}
             aria-labelledby="possible-representative"
           >
-          <div className={styles.representativeCardTop}>
-            <div>
-              <p className={styles.meta}>Based on your ZIP lookup</p>
-              <h3 id="possible-representative">
-                {displayedRepresentative.name} may be your House representative
-              </h3>
-              <p>
-                This match may be inaccurate because ZIP codes can cross House
-                districts. Confirm your representative on the{" "}
+            <div className={styles.representativeCardTop}>
+              <div>
+                <h3 id="possible-representative">
+                  {displayedRepresentative.name} may be your House
+                  representative
+                </h3>
+
+                <p className={styles.representativeVoteCallout}>
+                  {representativeHelpedImpeachment ? (
+                    <Check aria-hidden="true" className={styles.impeachIcon} />
+                  ) : (
+                    <X aria-hidden="true" className={styles.impeachIcon} />
+                  )}
+                  <span>
+                    {representativeVoteStatus
+                      ? representativeVoteStatus.helpedImpeachmentMoveForward
+                        ? `${displayedRepresentative.name} did vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                        : `${displayedRepresentative.name} did not vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                      : `No tracked House vote record was found for ${displayedRepresentative.name} in this dataset.`}
+                  </span>
+                </p>
+              </div>
+
+              <div className={styles.representativeActions}>
                 <a
-                  href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                  className={styles.representativeLink}
+                  href={displayedRepresentative.contactUrl}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  official House lookup
-                </a>{" "}
-                before relying on this result.
-              </p>
+                  <Mail aria-hidden="true" className={styles.buttonIcon} />
+                  Contact {displayedRepresentative.name}
+                </a>
 
-              <p className={styles.representativeVoteCallout}>
-                {representativeHelpedImpeachment ? <CheckIcon /> : <XIcon />}
-                <span>
-                  {representativeVoteStatus
-                    ? representativeVoteStatus.helpedImpeachmentMoveForward
-                      ? `${displayedRepresentative.name} did vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
-                      : `${displayedRepresentative.name} did not vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
-                    : `No tracked House vote record was found for ${displayedRepresentative.name} in this dataset.`}
-                </span>
-              </p>
-            </div>
+                <details className={styles.copyTemplate}>
+                  <summary>
+                    <span>Quick copy email template</span>
+                  </summary>
 
-            <div className={styles.representativeActions}>
-              <a
-                className={styles.representativeLink}
-                href={displayedRepresentative.contactUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <EmailIcon />
-                Contact {displayedRepresentative.name}
-              </a>
+                  <div className={styles.copyTemplateBody}>
+                    <textarea
+                      aria-label="Template email to representative"
+                      readOnly
+                      value={representativeEmailTemplate}
+                    />
 
-              <details className={styles.copyTemplate}>
-                <summary>
-                  <span>Quick copy email template</span>
-                </summary>
+                    <div className={styles.copyTemplateActions}>
+                      <button
+                        className={styles.copyTemplateButton}
+                        onClick={handleCopyTemplate}
+                        type="button"
+                      >
+                        <Copy
+                          aria-hidden="true"
+                          className={styles.buttonIcon}
+                        />
+                        Copy message
+                      </button>
 
-                <div className={styles.copyTemplateBody}>
-                  <textarea
-                    aria-label="Template email to representative"
-                    readOnly
-                    value={REPRESENTATIVE_EMAIL_TEMPLATE}
-                  />
-
-                  <div className={styles.copyTemplateActions}>
-                    <button
-                      className={styles.copyTemplateButton}
-                      onClick={handleCopyTemplate}
-                      type="button"
-                    >
-                      Copy message
-                    </button>
-
-                    <p aria-live="polite" className={styles.copyTemplateStatus}>
-                      {copyTemplateStatus}
-                    </p>
+                      <p
+                        aria-live="polite"
+                        className={styles.copyTemplateStatus}
+                      >
+                        {copyTemplateStatus}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </details>
+                </details>
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
         ) : null}
       </div>
 
       <div className={styles.stateGrid}>
-        <section className={styles.memberPanel} aria-labelledby="your-state">
+        <section
+          className={styles.memberPanel}
+          aria-label="State House vote records"
+        >
           <div className={styles.statePanelHeader}>
-            <div>
-              <h2 id="your-state">Your state</h2>
-            </div>
-
             <label className={styles.stateSelect}>
               <span>State</span>
               <select
@@ -579,6 +665,10 @@ export function StateVoteSummary() {
                                       rel="noopener noreferrer"
                                       target="_blank"
                                     >
+                                      <Mail
+                                        aria-hidden="true"
+                                        className={styles.linkIcon}
+                                      />
                                       {contactUrl ? "Contact" : "Find contact"}
                                     </a>
                                   </td>
@@ -592,9 +682,15 @@ export function StateVoteSummary() {
                                   <td data-label="Helped impeachment move forward?">
                                     <span className={styles.impeachStatus}>
                                       {votedToImpeach ? (
-                                        <CheckIcon />
+                                        <Check
+                                          aria-hidden="true"
+                                          className={styles.impeachIcon}
+                                        />
                                       ) : (
-                                        <XIcon />
+                                        <X
+                                          aria-hidden="true"
+                                          className={styles.impeachIcon}
+                                        />
                                       )}
                                       {votedToImpeach ? "Yes" : "No"}
                                     </span>
@@ -608,6 +704,10 @@ export function StateVoteSummary() {
                                         rel="noopener noreferrer"
                                         target="_blank"
                                       >
+                                        <ExternalLink
+                                          aria-hidden="true"
+                                          className={styles.linkIcon}
+                                        />
                                         Funding sources
                                       </a>
                                     ) : (

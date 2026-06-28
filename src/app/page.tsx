@@ -1,3 +1,4 @@
+import { Landmark, Mail, Vote } from "lucide-react";
 import { SharePageButton } from "./_components/share-page-button";
 import { StateVoteSummary } from "./_components/state-vote-summary";
 import styles from "./page.module.css";
@@ -7,7 +8,7 @@ export default function Home() {
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <h1>Track efforts to impeach Trump</h1>
+          <p className={styles.siteTitle}>Track efforts to impeach Trump</p>
           <p>
             Ever wonder why Trump has not been impeached yet? Here is why:
             follow the House votes that show who helped impeachment move
@@ -23,6 +24,7 @@ export default function Home() {
             rel="noopener noreferrer"
             target="_blank"
           >
+            <Vote aria-hidden="true" className={styles.buttonIcon} />
             Register to vote
           </a>
           <a
@@ -31,6 +33,7 @@ export default function Home() {
             rel="noopener noreferrer"
             target="_blank"
           >
+            <Mail aria-hidden="true" className={styles.buttonIcon} />
             Contact your representative
           </a>
           <a
@@ -39,6 +42,7 @@ export default function Home() {
             rel="noopener noreferrer"
             target="_blank"
           >
+            <Landmark aria-hidden="true" className={styles.buttonIcon} />
             Contact your senators
           </a>
         </div>
