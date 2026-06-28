@@ -4,13 +4,16 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Landmark,
   Mail,
   MapPin,
   Search,
+  Vote,
   X,
 } from "lucide-react";
 import {
   type FormEvent,
+  type SyntheticEvent,
   useMemo,
   useState,
   useSyncExternalStore,
@@ -22,6 +25,7 @@ import { memberFullNamesById } from "@/data/memberNames";
 import { getRegionName, usRegions } from "@/data/states";
 import { memberVotesByVoteId, voteMetadata } from "@/data/votes";
 import type { MemberVoteRecord } from "@/data/types";
+import { SharePageButton } from "./share-page-button";
 import styles from "../page.module.css";
 
 const DETECTED_STATE_COOKIE = "detected_state";
@@ -131,6 +135,13 @@ type RepresentativeVoteStatus = {
   helpedImpeachmentMoveForward: boolean;
   rawVote: MemberVoteRecord["rawVote"];
   resolution: string;
+};
+type ActionStepKey = "findRepresentative" | "reviewVotes" | "keepPressure";
+
+const INITIAL_ACTION_STEPS: Record<ActionStepKey, boolean> = {
+  findRepresentative: true,
+  keepPressure: false,
+  reviewVotes: false,
 };
 
 const repContactsByGeoid: Record<string, RepresentativeContactRecord> =
@@ -256,6 +267,8 @@ function normalizeZipInput(value: string) {
 
 export function StateVoteSummary() {
   const [chosenState, setChosenState] = useState<string | null>(null);
+  const [openActionSteps, setOpenActionSteps] =
+    useState<Record<ActionStepKey, boolean>>(INITIAL_ACTION_STEPS);
   const [zipInput, setZipInput] = useState("");
   const [manualRepresentative, setManualRepresentative] =
     useState<PossibleRepresentative | null>(null);
@@ -317,6 +330,19 @@ export function StateVoteSummary() {
     }
   }
 
+  function handleActionStepToggle(
+    step: ActionStepKey,
+    event: SyntheticEvent<HTMLDetailsElement>,
+  ) {
+    const isOpen = event.currentTarget.open;
+
+    setOpenActionSteps((currentSteps) =>
+      currentSteps[step] === isOpen
+        ? currentSteps
+        : { ...currentSteps, [step]: isOpen },
+    );
+  }
+
   async function handleZipLookup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -359,6 +385,11 @@ export function StateVoteSummary() {
         selectState(representativeState);
       }
 
+      setOpenActionSteps((currentSteps) => ({
+        ...currentSteps,
+        findRepresentative: true,
+        reviewVotes: true,
+      }));
       setShowOfficialZipLookupLink(false);
       setZipLookupMessage("");
     } catch {
@@ -386,16 +417,43 @@ export function StateVoteSummary() {
   }
 
   return (
-    <section className={styles.section} aria-labelledby="contact-rep-cta">
-      <div className={styles.lookupHeader}>
-        <h2 className={styles.lookupCta} id="contact-rep-cta">
-          <span className={styles.lookupCtaText}>
-            How to contact your rep about impeaching Trump in under 5 minutes
-          </span>
-        </h2>
+    <section
+      className={styles.guidedSection}
+      aria-labelledby="guided-process-title"
+    >
+      <div className={styles.guidedHeader}>
+        <h1 className={styles.guidedTitle} id="guided-process-title">
+          {"Take action, push for Trump's impeachment!"}
+        </h1>
+        <p>
+          Follow the steps to find your House representative, send a message,
+          and check the tracked House votes.
+        </p>
       </div>
 
-      <div className={styles.zipLookupCard}>
+      <div className={styles.actionSteps}>
+        <details
+          className={styles.actionStep}
+          onToggle={(event) =>
+            handleActionStepToggle("findRepresentative", event)
+          }
+          open={openActionSteps.findRepresentative}
+        >
+          <summary className={styles.actionStepSummary}>
+            <span className={styles.actionStepNumber}>Step 1</span>
+            <span className={styles.actionStepSummaryText}>
+              <span className={styles.actionStepTitle}>
+                Find your representative, contact them
+              </span>
+              <span className={styles.actionStepDescription}>
+                Enter your ZIP to find a possible House representative and get
+                a copy-ready message.
+              </span>
+            </span>
+          </summary>
+
+          <div className={styles.actionStepBody}>
+            <div className={styles.zipLookupCard}>
         <div className={styles.zipLookup}>
           <div className={styles.zipLookupText}>
             <h2 id="representative-lookup">
@@ -549,9 +607,81 @@ export function StateVoteSummary() {
             </div>
           </aside>
         ) : null}
-      </div>
+            </div>
+          </div>
+        </details>
 
-      <div className={styles.stateGrid}>
+        <details
+          className={styles.actionStep}
+          onToggle={(event) => handleActionStepToggle("keepPressure", event)}
+          open={openActionSteps.keepPressure}
+        >
+          <summary className={styles.actionStepSummary}>
+            <span className={styles.actionStepNumber}>Step 2</span>
+            <span className={styles.actionStepSummaryText}>
+              <span className={styles.actionStepTitle}>
+                Share, register, and keep the pressure on
+              </span>
+              <span className={styles.actionStepDescription}>
+                Send this page around, check your voter registration, and
+                contact senators too.
+              </span>
+            </span>
+          </summary>
+
+          <div className={styles.actionStepBody}>
+            <div className={styles.stepCtaGroup} aria-label="More actions">
+              <SharePageButton />
+              <a
+                className={styles.ctaLink}
+                href="https://vote.gov/"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Vote aria-hidden="true" className={styles.buttonIcon} />
+                Register to vote
+              </a>
+              <a
+                className={styles.ctaLink}
+                href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Mail aria-hidden="true" className={styles.buttonIcon} />
+                Official House lookup
+              </a>
+              <a
+                className={styles.ctaLink}
+                href="https://www.senate.gov/senators/senators-contact.htm"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Landmark aria-hidden="true" className={styles.buttonIcon} />
+                Contact your senators
+              </a>
+            </div>
+          </div>
+        </details>
+
+        <details
+          className={styles.actionStep}
+          onToggle={(event) => handleActionStepToggle("reviewVotes", event)}
+          open={openActionSteps.reviewVotes}
+        >
+          <summary className={styles.actionStepSummary}>
+            <span className={styles.actionStepNumber}>Step 3</span>
+            <span className={styles.actionStepSummaryText}>
+              <span className={styles.actionStepTitle}>
+                Check the House vote record
+              </span>
+              <span className={styles.actionStepDescription}>
+                Pick a state to review the two tracked roll-call records.
+              </span>
+            </span>
+          </summary>
+
+          <div className={styles.actionStepBody}>
+            <div className={styles.stateGrid}>
         <section
           className={styles.memberPanel}
           aria-label="State House vote records"
@@ -757,7 +887,10 @@ export function StateVoteSummary() {
               House roll calls.
             </p>
           )}
-        </section>
+              </section>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
   );
