@@ -136,13 +136,19 @@ type RepresentativeVoteStatus = {
   rawVote: MemberVoteRecord["rawVote"];
   resolution: string;
 };
-type ActionStepKey = "findRepresentative" | "reviewVotes" | "keepPressure";
+type ActionStepKey =
+  | "findRepresentative"
+  | "reviewVotes"
+  | "keepPressure"
+  | "voteMidterms";
 
 const INITIAL_ACTION_STEPS: Record<ActionStepKey, boolean> = {
   findRepresentative: true,
   keepPressure: false,
   reviewVotes: false,
+  voteMidterms: false,
 };
+const POLLING_PLACE_LOOKUP_URL = "https://www.usa.gov/find-polling-place";
 
 const repContactsByGeoid: Record<string, RepresentativeContactRecord> =
   geoidToRepContact;
@@ -643,15 +649,6 @@ export function StateVoteSummary() {
               </a>
               <a
                 className={styles.ctaLink}
-                href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Mail aria-hidden="true" className={styles.buttonIcon} />
-                Official House lookup
-              </a>
-              <a
-                className={styles.ctaLink}
                 href="https://www.senate.gov/senators/senators-contact.htm"
                 rel="noopener noreferrer"
                 target="_blank"
@@ -665,11 +662,44 @@ export function StateVoteSummary() {
 
         <details
           className={styles.actionStep}
+          onToggle={(event) => handleActionStepToggle("voteMidterms", event)}
+          open={openActionSteps.voteMidterms}
+        >
+          <summary className={styles.actionStepSummary}>
+            <span className={styles.actionStepNumber}>Step 3</span>
+            <span className={styles.actionStepSummaryText}>
+              <span className={styles.actionStepTitle}>
+                Vote for a House member who supports impeachment
+              </span>
+              <span className={styles.actionStepDescription}>
+                The next general election for House members is November 3,
+                2026. Find your polling place and make a plan to vote.
+              </span>
+            </span>
+          </summary>
+
+          <div className={styles.actionStepBody}>
+            <div className={styles.stepCtaGroup} aria-label="Voting actions">
+              <a
+                className={styles.ctaLink}
+                href={POLLING_PLACE_LOOKUP_URL}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <MapPin aria-hidden="true" className={styles.buttonIcon} />
+                Find where to vote
+              </a>
+            </div>
+          </div>
+        </details>
+
+        <details
+          className={styles.actionStep}
           onToggle={(event) => handleActionStepToggle("reviewVotes", event)}
           open={openActionSteps.reviewVotes}
         >
           <summary className={styles.actionStepSummary}>
-            <span className={styles.actionStepNumber}>Step 3</span>
+            <span className={styles.actionStepNumber}>Step 4</span>
             <span className={styles.actionStepSummaryText}>
               <span className={styles.actionStepTitle}>
                 Check the House vote record
