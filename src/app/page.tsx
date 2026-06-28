@@ -1,66 +1,48 @@
-import Image from "next/image";
 import styles from "./page.module.css";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
+    <main className={styles.page}>
+      <section className={styles.hero}>
+        <p className={styles.kicker}>U.S. House roll-call votes</p>
+        <h1>Trump impeachment-related votes</h1>
+      </section>
+
+      <section className={styles.section} aria-labelledby="tracked-votes">
+        <h2 id="tracked-votes">Tracked votes</h2>
+
+        <div className={styles.voteList}>
+          <article className={styles.voteCard}>
+            <div>
+              <p className={styles.meta}>June 24, 2025</p>
+              <h3>Roll Call 175 · H. Res. 537</h3>
+              <p>On Motion to Table · Passed</p>
+            </div>
             <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              href="https://clerk.house.gov/Votes/2025175"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
+              Official House Clerk source
+            </a>
+          </article>
+
+          <article className={styles.voteCard}>
+            <div>
+              <p className={styles.meta}>December 11, 2025</p>
+              <h3>Roll Call 322 · H. Res. 939</h3>
+              <p>On Motion to Table · Passed</p>
+            </div>
             <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              href="https://clerk.house.gov/Votes/2025322"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Official House Clerk source
+            </a>
+          </article>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
