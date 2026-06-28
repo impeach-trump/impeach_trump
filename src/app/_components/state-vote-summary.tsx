@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { interpretVote } from "@/data/interpretVote";
+import { memberFullNamesById } from "@/data/memberNames";
 import { getRegionName, usRegions } from "@/data/states";
 import { memberVotesByVoteId, voteMetadata } from "@/data/votes";
 import type { MemberVoteRecord } from "@/data/types";
@@ -72,11 +73,6 @@ export function StateVoteSummary() {
     readStoredOrDetectedState,
     getServerSnapshot,
   );
-  const detectedState = useSyncExternalStore(
-    subscribeToBrowserState,
-    () => readCookie(DETECTED_STATE_COOKIE),
-    getServerSnapshot,
-  );
   const selectedState = chosenState ?? storedOrDetectedState;
 
   const selectedStateName = selectedState ? getRegionName(selectedState) : "";
@@ -109,11 +105,6 @@ export function StateVoteSummary() {
       <div className={styles.sectionHeader}>
         <div>
           <h2 id="your-state">Your state</h2>
-          <p>
-            {detectedState
-              ? `Detected as ${getRegionName(detectedState)} from Vercel location headers.`
-              : "Choose a state if automatic detection is unavailable."}
-          </p>
         </div>
 
         <label className={styles.stateSelect}>
@@ -168,7 +159,7 @@ export function StateVoteSummary() {
                             <th scope="col">Position</th>
                             <th scope="col">Party</th>
                             <th scope="col">Official vote</th>
-                            <th scope="col">Voted to impeach Trump?</th>
+                            <th scope="col">Helped impeachment move forward?</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -178,6 +169,9 @@ export function StateVoteSummary() {
                                 memberVote.rawVote,
                                 vote.voteQuestion,
                               ) === IMPEACHMENT_SUPPORT;
+                            const memberName =
+                              memberFullNamesById[memberVote.memberId] ??
+                              memberVote.name;
 
                             return (
                               <tr
@@ -188,7 +182,7 @@ export function StateVoteSummary() {
                                 }
                                 key={`${vote.id}-${memberVote.memberId}`}
                               >
-                                <td>{memberVote.name}</td>
+                                <td>{memberName}</td>
                                 <td>{getPosition(vote.chamber)}</td>
                                 <td>{memberVote.party}</td>
                                 <td>{memberVote.rawVote}</td>
@@ -212,15 +206,6 @@ export function StateVoteSummary() {
                 </article>
               ))}
             </div>
-          </section>
-
-          <section className={styles.memberPanel} aria-labelledby="senate-votes">
-            <h3 id="senate-votes">Senate members from {selectedStateName}</h3>
-            <p className={styles.emptyState}>
-              The tracked records are House roll-call votes only. Senators did
-              not cast recorded votes in these House proceedings, so there are
-              no Senate vote records to show for this dataset.
-            </p>
           </section>
         </div>
       ) : (
