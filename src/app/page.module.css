@@ -226,10 +226,19 @@
   background: #edf6ff;
 }
 
+.representativeCardPositive {
+  border-color: #9bd2b0;
+  background: #e8f7ee;
+}
+
+.representativeCardNegative {
+  border-color: #efb7b7;
+  background: #fdeeee;
+}
+
 .representativeCardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
   gap: 20px;
 }
 
@@ -252,8 +261,37 @@
   text-decoration-thickness: 2px;
 }
 
+.representativeVoteCallout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 900;
+}
+
+.representativeCardPositive .representativeVoteCallout {
+  background: #d7f0e0;
+  color: #106b36;
+}
+
+.representativeCardNegative .representativeVoteCallout {
+  background: #f8dddd;
+  color: #a41e1e;
+}
+
+.representativeActions {
+  display: grid;
+  align-self: start;
+  gap: 12px;
+}
+
 .representativeLink {
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 10px 14px;
   border: 1px solid #9bbfe3;
   border-radius: 8px;
@@ -267,11 +305,25 @@
   text-decoration-thickness: 2px;
 }
 
+.emailIcon {
+  flex: 0 0 auto;
+  width: 1.2em;
+  height: 1.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .copyTemplate {
   display: grid;
-  gap: 12px;
-  border-top: 1px solid #cbe0f5;
-  padding-top: 14px;
+  gap: 14px;
+  padding: 16px;
+  border: 2px solid #6f9fce;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(24, 77, 126, 0.16);
 }
 
 .copyTemplate summary {
@@ -280,7 +332,8 @@
   justify-content: space-between;
   gap: 12px;
   cursor: pointer;
-  color: var(--foreground);
+  color: #143f67;
+  font-size: 1.02rem;
   font-weight: 900;
   line-height: 1.25;
 }
@@ -295,25 +348,17 @@
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #9bbfe3;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #82add8;
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--link);
+  background: #edf6ff;
+  color: #143f67;
   font-weight: 900;
 }
 
 .copyTemplate[open] summary::after {
   content: "-";
-}
-
-.copyTemplateHint {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
 }
 
 .copyTemplateBody {
@@ -323,12 +368,12 @@
 
 .copyTemplateBody textarea {
   width: 100%;
-  min-height: 260px;
+  min-height: 300px;
   resize: vertical;
   padding: 12px;
-  border: 1px solid #b7d0eb;
+  border: 1px solid #82add8;
   border-radius: 8px;
-  background: #ffffff;
+  background: #fbfdff;
   color: var(--foreground);
   font: inherit;
   font-size: 0.9rem;
@@ -344,10 +389,10 @@
 .copyTemplateButton {
   min-height: 42px;
   padding: 10px 14px;
-  border: 1px solid #9bbfe3;
+  border: 1px solid #143f67;
   border-radius: 8px;
-  background: var(--foreground);
-  color: var(--background);
+  background: #143f67;
+  color: #ffffff;
   cursor: pointer;
   font: inherit;
   font-weight: 800;
@@ -589,6 +634,10 @@
     display: grid;
   }
 
+  .representativeCardTop {
+    grid-template-columns: 1fr;
+  }
+
   .stateSelect,
   .zipLookupForm {
     min-width: 0;
@@ -605,10 +654,6 @@
 
   .copyTemplate summary {
     align-items: flex-start;
-  }
-
-  .copyTemplateHint {
-    margin-left: 0;
   }
 
   .voteCard {

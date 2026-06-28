@@ -16,8 +16,6 @@ import type { MemberVoteRecord } from "@/data/types";
 import styles from "../page.module.css";
 
 const DETECTED_STATE_COOKIE = "detected_state";
-const DETECTED_REP_COOKIE_PREFIX = "detected_rep_";
-const DETECTED_REP_SNAPSHOT_SEPARATOR = "\u001f";
 const SELECTED_STATE_STORAGE_KEY = "selected_state";
 const voteRecordsById: Record<string, MemberVoteRecord[]> = memberVotesByVoteId;
 const openSecretsIdsByMemberId: Record<string, string> =
@@ -40,7 +38,6 @@ type PossibleRepresentative = {
   geoid: string;
   name: string;
   party: string;
-  source: "detected" | "manual";
   zipCode: string;
 };
 
@@ -52,13 +49,20 @@ type RepresentativeContactRecord = {
 
 type ZipLookupResponse =
   | {
-      representative: Omit<PossibleRepresentative, "source">;
+      representative: PossibleRepresentative;
       status: "found";
     }
   | {
       message: string;
       status: "invalid" | "not_found";
     };
+
+type RepresentativeVoteStatus = {
+  displayDate: string;
+  helpedImpeachmentMoveForward: boolean;
+  rawVote: MemberVoteRecord["rawVote"];
+  resolution: string;
+};
 
 const repContactsByGeoid: Record<string, RepresentativeContactRecord> =
   geoidToRepContact;
@@ -88,6 +92,41 @@ const contactUrlByRepresentative = Object.values(repContactsByGeoid).reduce<
 
   return contacts;
 }, {});
+const latestTrackedVotes = [...voteMetadata].sort((a, b) =>
+  b.date.localeCompare(a.date),
+);
+
+function getLatestRepresentativeVoteStatus(
+  representative: PossibleRepresentative,
+): RepresentativeVoteStatus | null {
+  const representativeKey = getRepresentativeContactKey(
+    representative.name,
+    representative.party,
+  );
+
+  for (const vote of latestTrackedVotes) {
+    const memberVote = (voteRecordsById[vote.id] ?? []).find(
+      (voteRecord) =>
+        getRepresentativeContactKey(
+          memberFullNamesById[voteRecord.memberId] ?? voteRecord.name,
+          voteRecord.party,
+        ) === representativeKey,
+    );
+
+    if (memberVote) {
+      return {
+        displayDate: vote.displayDate,
+        helpedImpeachmentMoveForward:
+          interpretVote(memberVote.rawVote, vote.voteQuestion) ===
+          IMPEACHMENT_SUPPORT,
+        rawVote: memberVote.rawVote,
+        resolution: vote.resolution,
+      };
+    }
+  }
+
+  return null;
+}
 
 function CheckIcon() {
   return (
@@ -111,6 +150,20 @@ function XIcon() {
       viewBox="0 0 20 20"
     >
       <path d="m6 6 8 8M14 6l-8 8" />
+    </svg>
+  );
+}
+
+function EmailIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className={styles.emailIcon}
+      focusable="false"
+      viewBox="0 0 20 20"
+    >
+      <path d="M3.5 5.5h13v9h-13z" />
+      <path d="m4 6 6 5 6-5" />
     </svg>
   );
 }
@@ -142,47 +195,6 @@ function readStoredOrDetectedState() {
   );
 }
 
-function readDetectedRepresentativeSnapshot() {
-  const zipCode = readCookie(`${DETECTED_REP_COOKIE_PREFIX}zip`);
-  const geoid = readCookie(`${DETECTED_REP_COOKIE_PREFIX}geoid`);
-  const name = readCookie(`${DETECTED_REP_COOKIE_PREFIX}name`);
-  const party = readCookie(`${DETECTED_REP_COOKIE_PREFIX}party`);
-  const contactUrl = readCookie(`${DETECTED_REP_COOKIE_PREFIX}contact_url`);
-
-  if (!zipCode || !geoid || !name || !contactUrl) {
-    return "";
-  }
-
-  return [contactUrl, geoid, name, party, zipCode]
-    .map((value) => encodeURIComponent(value))
-    .join(DETECTED_REP_SNAPSHOT_SEPARATOR);
-}
-
-function parseDetectedRepresentativeSnapshot(
-  snapshot: string,
-): PossibleRepresentative | null {
-  if (!snapshot) {
-    return null;
-  }
-
-  const [contactUrl, geoid, name, party, zipCode] = snapshot
-    .split(DETECTED_REP_SNAPSHOT_SEPARATOR)
-    .map((value) => decodeURIComponent(value));
-
-  if (!zipCode || !geoid || !name || !contactUrl) {
-    return null;
-  }
-
-  return {
-    contactUrl,
-    geoid,
-    name,
-    party,
-    source: "detected",
-    zipCode,
-  };
-}
-
 function normalizeZipInput(value: string) {
   return value.replace(/\D/g, "").slice(0, 5);
 }
@@ -203,18 +215,20 @@ export function StateVoteSummary() {
     readStoredOrDetectedState,
     getServerSnapshot,
   );
-  const detectedRepresentativeSnapshot = useSyncExternalStore(
-    subscribeToBrowserState,
-    readDetectedRepresentativeSnapshot,
-    getServerSnapshot,
-  );
-  const possibleRepresentative = useMemo(
-    () => parseDetectedRepresentativeSnapshot(detectedRepresentativeSnapshot),
-    [detectedRepresentativeSnapshot],
-  );
   const selectedState = chosenState ?? storedOrDetectedState;
-  const displayedRepresentative =
-    manualRepresentative ?? possibleRepresentative;
+  const displayedRepresentative = manualRepresentative;
+  const representativeVoteStatus = displayedRepresentative
+    ? getLatestRepresentativeVoteStatus(displayedRepresentative)
+    : null;
+  const representativeHelpedImpeachment =
+    representativeVoteStatus?.helpedImpeachmentMoveForward === true;
+  const representativeCardClassName = displayedRepresentative
+    ? `${styles.representativeCard} ${
+        representativeHelpedImpeachment
+          ? styles.representativeCardPositive
+          : styles.representativeCardNegative
+      }`
+    : styles.representativeCard;
 
   const selectedStateName = selectedState ? getRegionName(selectedState) : "";
 
@@ -276,7 +290,6 @@ export function StateVoteSummary() {
 
       setManualRepresentative({
         ...result.representative,
-        source: "manual",
       });
       setShowOfficialZipLookupLink(false);
       setZipLookupMessage(`Showing possible representative for ZIP ${zipCode}.`);
@@ -330,11 +343,7 @@ export function StateVoteSummary() {
       <div className={styles.zipLookup}>
         <div className={styles.zipLookupText}>
           <h3>Find your House representative</h3>
-          <p>
-            {possibleRepresentative
-              ? "Auto-detection can be imprecise. Enter a ZIP code to check another district."
-              : "ZIP was not auto-detected. Enter yours to look up a possible House representative."}
-          </p>
+          <p>Enter your ZIP code to look up a possible House representative.</p>
         </div>
 
         <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
@@ -393,16 +402,12 @@ export function StateVoteSummary() {
 
       {displayedRepresentative ? (
         <aside
-          className={styles.representativeCard}
+          className={representativeCardClassName}
           aria-labelledby="possible-representative"
         >
           <div className={styles.representativeCardTop}>
             <div>
-              <p className={styles.meta}>
-                {displayedRepresentative.source === "manual"
-                  ? "Based on your ZIP lookup"
-                  : "Based on detected ZIP code"}
-              </p>
+              <p className={styles.meta}>Based on your ZIP lookup</p>
               <h3 id="possible-representative">
                 {displayedRepresentative.name} may be your House representative
               </h3>
@@ -418,48 +423,59 @@ export function StateVoteSummary() {
                 </a>{" "}
                 before relying on this result.
               </p>
+
+              <p className={styles.representativeVoteCallout}>
+                {representativeHelpedImpeachment ? <CheckIcon /> : <XIcon />}
+                <span>
+                  {representativeVoteStatus
+                    ? representativeVoteStatus.helpedImpeachmentMoveForward
+                      ? `${displayedRepresentative.name} did vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                      : `${displayedRepresentative.name} did not vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                    : `No tracked House vote record was found for ${displayedRepresentative.name} in this dataset.`}
+                </span>
+              </p>
             </div>
 
-            <a
-              className={styles.representativeLink}
-              href={displayedRepresentative.contactUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Contact {displayedRepresentative.name}
-            </a>
+            <div className={styles.representativeActions}>
+              <a
+                className={styles.representativeLink}
+                href={displayedRepresentative.contactUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <EmailIcon />
+                Contact {displayedRepresentative.name}
+              </a>
+
+              <details className={styles.copyTemplate}>
+                <summary>
+                  <span>Quick copy email template</span>
+                </summary>
+
+                <div className={styles.copyTemplateBody}>
+                  <textarea
+                    aria-label="Template email to representative"
+                    readOnly
+                    value={REPRESENTATIVE_EMAIL_TEMPLATE}
+                  />
+
+                  <div className={styles.copyTemplateActions}>
+                    <button
+                      className={styles.copyTemplateButton}
+                      onClick={handleCopyTemplate}
+                      type="button"
+                    >
+                      Copy message
+                    </button>
+
+                    <p aria-live="polite" className={styles.copyTemplateStatus}>
+                      {copyTemplateStatus}
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </div>
           </div>
-
-          <details className={styles.copyTemplate}>
-            <summary>
-              <span>Quick copy template</span>
-              <span className={styles.copyTemplateHint}>
-                Roll Call 175 / H. Res. 537
-              </span>
-            </summary>
-
-            <div className={styles.copyTemplateBody}>
-              <textarea
-                aria-label="Template email to representative"
-                readOnly
-                value={REPRESENTATIVE_EMAIL_TEMPLATE}
-              />
-
-              <div className={styles.copyTemplateActions}>
-                <button
-                  className={styles.copyTemplateButton}
-                  onClick={handleCopyTemplate}
-                  type="button"
-                >
-                  Copy message
-                </button>
-
-                <p aria-live="polite" className={styles.copyTemplateStatus}>
-                  {copyTemplateStatus}
-                </p>
-              </div>
-            </div>
-          </details>
         </aside>
       ) : null}
 
