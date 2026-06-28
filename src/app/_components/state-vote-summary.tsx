@@ -6,6 +6,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import geoidToRepContact from "@/data/geoid_to_rep_contact.json";
 import houseMemberOpenSecretsIds from "@/data/houseMemberOpenSecretsIds.json";
 import { interpretVote } from "@/data/interpretVote";
 import { memberFullNamesById } from "@/data/memberNames";
@@ -16,6 +17,7 @@ import styles from "../page.module.css";
 
 const DETECTED_STATE_COOKIE = "detected_state";
 const DETECTED_REP_COOKIE_PREFIX = "detected_rep_";
+const DETECTED_REP_SNAPSHOT_SEPARATOR = "\u001f";
 const SELECTED_STATE_STORAGE_KEY = "selected_state";
 const voteRecordsById: Record<string, MemberVoteRecord[]> = memberVotesByVoteId;
 const openSecretsIdsByMemberId: Record<string, string> =
@@ -42,6 +44,12 @@ type PossibleRepresentative = {
   zipCode: string;
 };
 
+type RepresentativeContactRecord = {
+  contactUrl: string | null;
+  name: string;
+  party: string;
+};
+
 type ZipLookupResponse =
   | {
       representative: Omit<PossibleRepresentative, "source">;
@@ -51,6 +59,35 @@ type ZipLookupResponse =
       message: string;
       status: "invalid" | "not_found";
     };
+
+const repContactsByGeoid: Record<string, RepresentativeContactRecord> =
+  geoidToRepContact;
+
+function normalizeRepresentativeName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv)\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function getRepresentativeContactKey(name: string, party: string) {
+  return `${normalizeRepresentativeName(name)}|${party}`;
+}
+
+const contactUrlByRepresentative = Object.values(repContactsByGeoid).reduce<
+  Record<string, string>
+>((contacts, representative) => {
+  if (representative.contactUrl) {
+    contacts[
+      getRepresentativeContactKey(representative.name, representative.party)
+    ] = representative.contactUrl;
+  }
+
+  return contacts;
+}, {});
 
 function CheckIcon() {
   return (
@@ -105,12 +142,32 @@ function readStoredOrDetectedState() {
   );
 }
 
-function readDetectedRepresentative(): PossibleRepresentative | null {
+function readDetectedRepresentativeSnapshot() {
   const zipCode = readCookie(`${DETECTED_REP_COOKIE_PREFIX}zip`);
   const geoid = readCookie(`${DETECTED_REP_COOKIE_PREFIX}geoid`);
   const name = readCookie(`${DETECTED_REP_COOKIE_PREFIX}name`);
   const party = readCookie(`${DETECTED_REP_COOKIE_PREFIX}party`);
   const contactUrl = readCookie(`${DETECTED_REP_COOKIE_PREFIX}contact_url`);
+
+  if (!zipCode || !geoid || !name || !contactUrl) {
+    return "";
+  }
+
+  return [contactUrl, geoid, name, party, zipCode]
+    .map((value) => encodeURIComponent(value))
+    .join(DETECTED_REP_SNAPSHOT_SEPARATOR);
+}
+
+function parseDetectedRepresentativeSnapshot(
+  snapshot: string,
+): PossibleRepresentative | null {
+  if (!snapshot) {
+    return null;
+  }
+
+  const [contactUrl, geoid, name, party, zipCode] = snapshot
+    .split(DETECTED_REP_SNAPSHOT_SEPARATOR)
+    .map((value) => decodeURIComponent(value));
 
   if (!zipCode || !geoid || !name || !contactUrl) {
     return null;
@@ -146,10 +203,14 @@ export function StateVoteSummary() {
     readStoredOrDetectedState,
     getServerSnapshot,
   );
-  const possibleRepresentative = useSyncExternalStore(
+  const detectedRepresentativeSnapshot = useSyncExternalStore(
     subscribeToBrowserState,
-    readDetectedRepresentative,
-    () => null,
+    readDetectedRepresentativeSnapshot,
+    getServerSnapshot,
+  );
+  const possibleRepresentative = useMemo(
+    () => parseDetectedRepresentativeSnapshot(detectedRepresentativeSnapshot),
+    [detectedRepresentativeSnapshot],
   );
   const selectedState = chosenState ?? storedOrDetectedState;
   const displayedRepresentative =
@@ -435,6 +496,7 @@ export function StateVoteSummary() {
                         <thead>
                           <tr>
                             <th scope="col">Member</th>
+                            <th scope="col">Contact</th>
                             <th scope="col">Position</th>
                             <th scope="col">Party</th>
                             <th scope="col">Official vote</th>
@@ -452,6 +514,15 @@ export function StateVoteSummary() {
                             const memberName =
                               memberFullNamesById[memberVote.memberId] ??
                               memberVote.name;
+                            const contactUrl =
+                              contactUrlByRepresentative[
+                                getRepresentativeContactKey(
+                                  memberName,
+                                  memberVote.party,
+                                )
+                              ];
+                            const contactHref =
+                              contactUrl ?? OFFICIAL_REPRESENTATIVE_LOOKUP_URL;
                             const mpid =
                               openSecretsIdsByMemberId[memberVote.memberId];
                             const openSecretsUrl = mpid
@@ -468,6 +539,21 @@ export function StateVoteSummary() {
                                 key={`${vote.id}-${memberVote.memberId}`}
                               >
                                 <td data-label="Member">{memberName}</td>
+                                <td data-label="Contact">
+                                  <a
+                                    aria-label={
+                                      contactUrl
+                                        ? `Contact ${memberName}`
+                                        : `Find official contact information for ${memberName}`
+                                    }
+                                    className={styles.contactLink}
+                                    href={contactHref}
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                  >
+                                    {contactUrl ? "Contact" : "Find contact"}
+                                  </a>
+                                </td>
                                 <td data-label="Position">
                                   {getPosition(vote.chamber)}
                                 </td>

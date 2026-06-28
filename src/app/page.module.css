@@ -406,7 +406,7 @@
 
 .memberTable {
   width: 100%;
-  min-width: 860px;
+  min-width: 980px;
   border-collapse: collapse;
   font-size: 0.95rem;
 }
@@ -472,12 +472,14 @@
   stroke-width: 3;
 }
 
+.contactLink,
 .donorLink {
   color: var(--link);
   font-weight: 800;
   white-space: nowrap;
 }
 
+.contactLink:hover,
 .donorLink:hover {
   text-decoration-thickness: 2px;
 }
