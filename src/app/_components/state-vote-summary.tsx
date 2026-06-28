@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeft,
   Check,
   Copy,
   ExternalLink,
@@ -291,6 +292,11 @@ export function StateVoteSummary() {
   );
   const selectedState = chosenState ?? storedOrDetectedState;
   const displayedRepresentative = manualRepresentative;
+  const hasRepresentativeResult = displayedRepresentative !== null;
+  const inactiveSearchTabIndex = hasRepresentativeResult ? -1 : undefined;
+  const zipStepperClassName = hasRepresentativeResult
+    ? `${styles.zipStepper} ${styles.zipStepperActive}`
+    : styles.zipStepper;
   const representativeVoteStatus = displayedRepresentative
     ? getLatestRepresentativeVoteStatus(displayedRepresentative)
     : null;
@@ -347,6 +353,11 @@ export function StateVoteSummary() {
         ? currentSteps
         : { ...currentSteps, [step]: isOpen },
     );
+  }
+
+  function handleRepresentativeBack() {
+    setManualRepresentative(null);
+    setCopyTemplateStatus("");
   }
 
   async function handleZipLookup(event: FormEvent<HTMLFormElement>) {
@@ -431,10 +442,6 @@ export function StateVoteSummary() {
         <h1 className={styles.guidedTitle} id="guided-process-title">
           {"Take action, push for Trump's impeachment!"}
         </h1>
-        <p>
-          Follow the steps to find your House representative, send a message,
-          and check the tracked House votes.
-        </p>
       </div>
 
       <div className={styles.actionSteps}>
@@ -460,169 +467,245 @@ export function StateVoteSummary() {
 
           <div className={styles.actionStepBody}>
             <div className={styles.zipLookupCard}>
-        <div className={styles.zipLookup}>
-          <div className={styles.zipLookupText}>
-            <h2 id="representative-lookup">
-              <MapPin aria-hidden="true" className={styles.headingIcon} />
-              Find your House representative
-            </h2>
-          </div>
-
-          <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
-            <label className={styles.zipInputGroup} htmlFor="zip-lookup">
-              <span>ZIP code</span>
-              <input
-                autoComplete="postal-code"
-                id="zip-lookup"
-                inputMode="numeric"
-                maxLength={10}
-                name="zip"
-                onChange={(event) => setZipInput(event.target.value)}
-                pattern="[0-9]{5}"
-                placeholder="98101"
-                type="text"
-                value={zipInput}
-              />
-            </label>
-
-            <div className={styles.zipLookupControls}>
-              <button
-                className={styles.zipLookupButton}
-                disabled={isLookingUpZip}
-                type="submit"
-              >
-                <Search aria-hidden="true" className={styles.buttonIcon} />
-                {isLookingUpZip ? "Looking up..." : "Look up"}
-              </button>
-
-              <a
-                className={styles.officialLookupLink}
-                href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Official search tool
-                <ExternalLink
-                  aria-hidden="true"
-                  className={styles.inlineIcon}
-                />
-              </a>
-            </div>
-
-            {zipLookupMessage ? (
-              <p
-                aria-live="polite"
-                className={
-                  zipLookupHasError
-                    ? `${styles.zipLookupMessage} ${styles.zipLookupError}`
-                    : styles.zipLookupMessage
-                }
-              >
-                {zipLookupMessage}
-                {showOfficialZipLookupLink ? (
-                  <>
-                    {" "}
-                    Try the{" "}
-                    <a
-                      href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      official House lookup
-                      <ExternalLink
-                        aria-hidden="true"
-                        className={styles.inlineIcon}
-                      />
-                    </a>
-                    .
-                  </>
-                ) : null}
-              </p>
-            ) : null}
-          </form>
-        </div>
-
-        {displayedRepresentative ? (
-          <aside
-            className={representativeCardClassName}
-            aria-labelledby="possible-representative"
-          >
-            <div className={styles.representativeCardTop}>
-              <div>
-                <h3 id="possible-representative">
-                  Your representative: {displayedRepresentative.name}
-                </h3>
-
-                <p className={styles.representativeVoteCallout}>
-                  {representativeHelpedImpeachment ? (
-                    <Check aria-hidden="true" className={styles.impeachIcon} />
-                  ) : (
-                    <X aria-hidden="true" className={styles.impeachIcon} />
-                  )}
-                  <span>
-                    {representativeVoteStatus
-                      ? representativeVoteStatus.helpedImpeachmentMoveForward
-                        ? `${displayedRepresentative.name} did vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
-                        : `${displayedRepresentative.name} did not vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
-                      : `No tracked House vote record was found for ${displayedRepresentative.name} in this dataset.`}
-                  </span>
-                </p>
-              </div>
-
-              <div className={styles.representativeActions}>
-                <div className={styles.contactMessageCard}>
-                  <a
-                    className={styles.representativeLink}
-                    href={displayedRepresentative.contactUrl}
-                    rel="noopener noreferrer"
-                    target="_blank"
+              <div className={zipStepperClassName}>
+                <div className={styles.zipStepperTrack}>
+                  <div
+                    aria-hidden={hasRepresentativeResult}
+                    className={styles.zipStepperPane}
                   >
-                    <Mail aria-hidden="true" className={styles.buttonIcon} />
-                    Contact {displayedRepresentative.name}
-                  </a>
-
-                  <details className={styles.copyTemplate}>
-                    <summary>
-                      <span className={styles.copyTemplateSummaryLabel}>
-                        <Copy aria-hidden="true" className={styles.linkIcon} />
-                        Quick copy email template
-                      </span>
-                    </summary>
-
-                    <div className={styles.copyTemplateBody}>
-                      <div className={styles.copyTemplateActions}>
-                        <button
-                          className={styles.copyTemplateButton}
-                          onClick={handleCopyTemplate}
-                          type="button"
-                        >
-                          <Copy
+                    <div className={styles.zipLookup}>
+                      <div className={styles.zipLookupText}>
+                        <h2 id="representative-lookup">
+                          <MapPin
                             aria-hidden="true"
-                            className={styles.buttonIcon}
+                            className={styles.headingIcon}
                           />
-                          Copy message
-                        </button>
-
-                        <p
-                          aria-live="polite"
-                          className={styles.copyTemplateStatus}
-                        >
-                          {copyTemplateStatus}
-                        </p>
+                          Find your House representative
+                        </h2>
                       </div>
 
-                      <textarea
-                        aria-label="Template email to representative"
-                        readOnly
-                        value={representativeEmailTemplate}
-                      />
+                      <form
+                        className={styles.zipLookupForm}
+                        onSubmit={handleZipLookup}
+                      >
+                        <label
+                          className={styles.zipInputGroup}
+                          htmlFor="zip-lookup"
+                        >
+                          <span>ZIP code</span>
+                          <input
+                            autoComplete="postal-code"
+                            id="zip-lookup"
+                            inputMode="numeric"
+                            maxLength={10}
+                            name="zip"
+                            onChange={(event) =>
+                              setZipInput(event.target.value)
+                            }
+                            pattern="[0-9]{5}"
+                            placeholder="98101"
+                            tabIndex={inactiveSearchTabIndex}
+                            type="text"
+                            value={zipInput}
+                          />
+                        </label>
+
+                        <div className={styles.zipLookupControls}>
+                          <button
+                            className={styles.zipLookupButton}
+                            disabled={isLookingUpZip}
+                            tabIndex={inactiveSearchTabIndex}
+                            type="submit"
+                          >
+                            <Search
+                              aria-hidden="true"
+                              className={styles.buttonIcon}
+                            />
+                            {isLookingUpZip ? "Looking up..." : "Look up"}
+                          </button>
+
+                          <a
+                            className={styles.officialLookupLink}
+                            href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                            rel="noopener noreferrer"
+                            tabIndex={inactiveSearchTabIndex}
+                            target="_blank"
+                          >
+                            Official search tool
+                            <ExternalLink
+                              aria-hidden="true"
+                              className={styles.inlineIcon}
+                            />
+                          </a>
+                        </div>
+
+                        {zipLookupMessage ? (
+                          <p
+                            aria-live="polite"
+                            className={
+                              zipLookupHasError
+                                ? `${styles.zipLookupMessage} ${styles.zipLookupError}`
+                                : styles.zipLookupMessage
+                            }
+                          >
+                            {zipLookupMessage}
+                            {showOfficialZipLookupLink ? (
+                              <>
+                                {" "}
+                                Try the{" "}
+                                <a
+                                  href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                                  rel="noopener noreferrer"
+                                  tabIndex={inactiveSearchTabIndex}
+                                  target="_blank"
+                                >
+                                  official House lookup
+                                  <ExternalLink
+                                    aria-hidden="true"
+                                    className={styles.inlineIcon}
+                                  />
+                                </a>
+                                .
+                              </>
+                            ) : null}
+                          </p>
+                        ) : null}
+                      </form>
                     </div>
-                  </details>
+                  </div>
+
+                  <div
+                    aria-hidden={!hasRepresentativeResult}
+                    className={styles.zipStepperPane}
+                  >
+                    {displayedRepresentative ? (
+                      <div className={styles.zipResultPanel}>
+                        <div className={styles.zipResultToolbar}>
+                          <button
+                            className={styles.zipStepperBackButton}
+                            onClick={handleRepresentativeBack}
+                            type="button"
+                          >
+                            <ArrowLeft
+                              aria-hidden="true"
+                              className={styles.linkIcon}
+                            />
+                            Back
+                          </button>
+                          <div className={styles.zipResultMeta}>
+                            <span>ZIP {displayedRepresentative.zipCode}</span>
+                          </div>
+                        </div>
+
+                        <aside
+                          className={representativeCardClassName}
+                          aria-labelledby="possible-representative"
+                        >
+                          <div className={styles.representativeCardTop}>
+                            <div>
+                              <h3
+                                className={styles.visuallyHidden}
+                                id="possible-representative"
+                              >
+                                {displayedRepresentative.name}
+                              </h3>
+
+                              <p className={styles.representativeVoteCallout}>
+                                {representativeHelpedImpeachment ? (
+                                  <Check
+                                    aria-hidden="true"
+                                    className={styles.impeachIcon}
+                                  />
+                                ) : (
+                                  <X
+                                    aria-hidden="true"
+                                    className={styles.impeachIcon}
+                                  />
+                                )}
+                                <span>
+                                  {representativeVoteStatus
+                                    ? representativeVoteStatus.helpedImpeachmentMoveForward
+                                      ? `Your representative, ${displayedRepresentative.name}, did vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                                      : `Your representative, ${displayedRepresentative.name}, did not vote to help impeachment move forward in the latest tracked vote (${representativeVoteStatus.resolution}, ${representativeVoteStatus.displayDate}).`
+                                    : `No tracked House vote record was found for your representative, ${displayedRepresentative.name}, in this dataset.`}
+                                </span>
+                              </p>
+                            </div>
+
+                            <div className={styles.representativeActions}>
+                              <div className={styles.contactMessageCard}>
+                                <a
+                                  className={styles.representativeLink}
+                                  href={displayedRepresentative.contactUrl}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
+                                >
+                                  <Mail
+                                    aria-hidden="true"
+                                    className={styles.buttonIcon}
+                                  />
+                                  Contact {displayedRepresentative.name}
+                                </a>
+
+                                <details className={styles.copyTemplate}>
+                                  <summary>
+                                    <span
+                                      className={
+                                        styles.copyTemplateSummaryLabel
+                                      }
+                                    >
+                                      <Copy
+                                        aria-hidden="true"
+                                        className={styles.linkIcon}
+                                      />
+                                      Quick copy email template
+                                    </span>
+                                  </summary>
+
+                                  <div className={styles.copyTemplateBody}>
+                                    <div
+                                      className={styles.copyTemplateActions}
+                                    >
+                                      <button
+                                        className={
+                                          styles.copyTemplateButton
+                                        }
+                                        onClick={handleCopyTemplate}
+                                        type="button"
+                                      >
+                                        <Copy
+                                          aria-hidden="true"
+                                          className={styles.buttonIcon}
+                                        />
+                                        Copy message
+                                      </button>
+
+                                      <p
+                                        aria-live="polite"
+                                        className={
+                                          styles.copyTemplateStatus
+                                        }
+                                      >
+                                        {copyTemplateStatus}
+                                      </p>
+                                    </div>
+
+                                    <textarea
+                                      aria-label="Template email to representative"
+                                      readOnly
+                                      value={representativeEmailTemplate}
+                                    />
+                                  </div>
+                                </details>
+                              </div>
+                            </div>
+                          </div>
+                        </aside>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-          </aside>
-        ) : null}
             </div>
           </div>
         </details>
