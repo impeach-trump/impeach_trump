@@ -37,6 +37,172 @@
   font-size: 1.25rem;
 }
 
+.section h3 {
+  font-size: 1.05rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sectionHeader p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.primaryLink {
+  width: fit-content;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--link);
+  font-weight: 700;
+}
+
+.primaryLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.stateSelect {
+  display: grid;
+  gap: 8px;
+  min-width: 220px;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stateSelect select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.stateGrid,
+.voteGroups {
+  display: grid;
+  gap: 16px;
+}
+
+.memberPanel,
+.voteGroup {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.voteGroup {
+  padding: 16px;
+  background: #fbfcfd;
+}
+
+.voteGroupHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.voteGroupHeader h4 {
+  margin: 6px 0;
+  font-size: 1rem;
+}
+
+.voteGroupHeader p,
+.emptyState {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.voteGroupHeader a {
+  flex-shrink: 0;
+  color: var(--link);
+  font-weight: 700;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.memberTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.memberTable th,
+.memberTable td {
+  padding: 10px 8px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.memberTable th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.memberTable tbody tr.impeachYesRow {
+  background: #e8f7ee;
+}
+
+.memberTable tbody tr.impeachNoRow {
+  background: #fdeeee;
+}
+
+.memberTable tbody tr.impeachYesRow td {
+  border-top-color: #b9dfc8;
+}
+
+.memberTable tbody tr.impeachNoRow td {
+  border-top-color: #efc4c4;
+}
+
+.impeachStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.impeachYesRow .impeachStatus {
+  color: #106b36;
+}
+
+.impeachNoRow .impeachStatus {
+  color: #a41e1e;
+}
+
+.impeachIcon {
+  flex: 0 0 auto;
+  width: 1.45em;
+  height: 1.45em;
+  padding: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
 .voteList {
   display: grid;
   gap: 14px;
@@ -80,6 +246,15 @@
 
   .hero h1 {
     font-size: 2.125rem;
+  }
+
+  .sectionHeader,
+  .voteGroupHeader {
+    display: grid;
+  }
+
+  .stateSelect {
+    min-width: 0;
   }
 
   .voteCard {
