@@ -58,7 +58,7 @@
 .guidedSection {
   display: grid;
   gap: 22px;
-  padding: 0 0 40px;
+  padding: 16px 0 40px;
 }
 
 .guidedHeader {
@@ -395,9 +395,9 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--link);
-  font-size: 0.85rem;
-  font-weight: 800;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
   line-height: 1.35;
 }
 
@@ -419,6 +419,12 @@
   gap: 10px;
   min-width: 0;
   max-width: 360px;
+}
+
+.zipLookupControls {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
 }
 
 .zipInputGroup {
@@ -508,8 +514,10 @@
 }
 
 .representativeCard h3 {
-  margin: 6px 0;
-  font-size: 1.05rem;
+  margin: 0 0 10px;
+  color: #3f4752;
+  font-size: 0.95rem;
+  line-height: 1.25;
 }
 
 .representativeCard p {
@@ -530,7 +538,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin: 0;
   padding: 10px 12px;
   border-radius: 8px;
   font-weight: 900;
@@ -552,15 +560,23 @@
   gap: 12px;
 }
 
+.contactMessageCard {
+  display: grid;
+  overflow: hidden;
+  border: 2px solid #6f9fce;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(24, 77, 126, 0.16);
+}
+
 .representativeLink {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 10px 14px;
-  border: 1px solid #9bbfe3;
-  border-radius: 8px;
-  background: var(--surface);
+  padding: 12px 16px;
+  border-bottom: 1px solid #c7dced;
+  background: #edf6ff;
   color: var(--link);
   font-weight: 800;
   line-height: 1.2;
@@ -572,12 +588,8 @@
 
 .copyTemplate {
   display: grid;
-  gap: 14px;
-  padding: 16px;
-  border: 2px solid #6f9fce;
-  border-radius: 8px;
+  gap: 0;
   background: #ffffff;
-  box-shadow: 0 10px 24px rgba(24, 77, 126, 0.16);
 }
 
 .copyTemplate summary {
@@ -585,6 +597,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 14px 16px;
   cursor: pointer;
   color: #143f67;
   font-size: 1.02rem;
@@ -595,6 +608,12 @@
 .copyTemplate summary span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.copyTemplateSummaryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .copyTemplate summary::marker,
@@ -620,10 +639,15 @@
   content: "-";
 }
 
+.copyTemplate[open] summary {
+  border-bottom: 1px solid #d7e6f5;
+}
+
 .copyTemplateBody {
   display: grid;
   gap: 10px;
   min-width: 0;
+  padding: 16px;
 }
 
 .copyTemplateBody textarea {
@@ -1009,7 +1033,7 @@
 
   .guidedSection {
     gap: 16px;
-    padding: 0 0 28px;
+    padding: 12px 0 28px;
   }
 
   .guidedHeader {
@@ -1081,6 +1105,11 @@
     width: 100%;
     min-width: 0;
     flex: 1 1 100%;
+  }
+
+  .zipLookupControls {
+    width: 100%;
+    justify-items: center;
   }
 
   .zipLookupButton {

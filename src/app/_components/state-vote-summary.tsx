@@ -466,15 +466,6 @@ export function StateVoteSummary() {
               <MapPin aria-hidden="true" className={styles.headingIcon} />
               Find your House representative
             </h2>
-            <a
-              className={styles.officialLookupLink}
-              href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Official search tool
-              <ExternalLink aria-hidden="true" className={styles.inlineIcon} />
-            </a>
           </div>
 
           <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
@@ -494,14 +485,29 @@ export function StateVoteSummary() {
               />
             </label>
 
-            <button
-              className={styles.zipLookupButton}
-              disabled={isLookingUpZip}
-              type="submit"
-            >
-              <Search aria-hidden="true" className={styles.buttonIcon} />
-              {isLookingUpZip ? "Looking up..." : "Look up"}
-            </button>
+            <div className={styles.zipLookupControls}>
+              <button
+                className={styles.zipLookupButton}
+                disabled={isLookingUpZip}
+                type="submit"
+              >
+                <Search aria-hidden="true" className={styles.buttonIcon} />
+                {isLookingUpZip ? "Looking up..." : "Look up"}
+              </button>
+
+              <a
+                className={styles.officialLookupLink}
+                href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Official search tool
+                <ExternalLink
+                  aria-hidden="true"
+                  className={styles.inlineIcon}
+                />
+              </a>
+            </div>
 
             {zipLookupMessage ? (
               <p
@@ -544,8 +550,7 @@ export function StateVoteSummary() {
             <div className={styles.representativeCardTop}>
               <div>
                 <h3 id="possible-representative">
-                  {displayedRepresentative.name} may be your House
-                  representative
+                  Your representative: {displayedRepresentative.name}
                 </h3>
 
                 <p className={styles.representativeVoteCallout}>
@@ -565,50 +570,55 @@ export function StateVoteSummary() {
               </div>
 
               <div className={styles.representativeActions}>
-                <a
-                  className={styles.representativeLink}
-                  href={displayedRepresentative.contactUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <Mail aria-hidden="true" className={styles.buttonIcon} />
-                  Contact {displayedRepresentative.name}
-                </a>
+                <div className={styles.contactMessageCard}>
+                  <a
+                    className={styles.representativeLink}
+                    href={displayedRepresentative.contactUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <Mail aria-hidden="true" className={styles.buttonIcon} />
+                    Contact {displayedRepresentative.name}
+                  </a>
 
-                <details className={styles.copyTemplate}>
-                  <summary>
-                    <span>Quick copy email template</span>
-                  </summary>
+                  <details className={styles.copyTemplate}>
+                    <summary>
+                      <span className={styles.copyTemplateSummaryLabel}>
+                        <Copy aria-hidden="true" className={styles.linkIcon} />
+                        Quick copy email template
+                      </span>
+                    </summary>
 
-                  <div className={styles.copyTemplateBody}>
-                    <textarea
-                      aria-label="Template email to representative"
-                      readOnly
-                      value={representativeEmailTemplate}
-                    />
+                    <div className={styles.copyTemplateBody}>
+                      <div className={styles.copyTemplateActions}>
+                        <button
+                          className={styles.copyTemplateButton}
+                          onClick={handleCopyTemplate}
+                          type="button"
+                        >
+                          <Copy
+                            aria-hidden="true"
+                            className={styles.buttonIcon}
+                          />
+                          Copy message
+                        </button>
 
-                    <div className={styles.copyTemplateActions}>
-                      <button
-                        className={styles.copyTemplateButton}
-                        onClick={handleCopyTemplate}
-                        type="button"
-                      >
-                        <Copy
-                          aria-hidden="true"
-                          className={styles.buttonIcon}
-                        />
-                        Copy message
-                      </button>
+                        <p
+                          aria-live="polite"
+                          className={styles.copyTemplateStatus}
+                        >
+                          {copyTemplateStatus}
+                        </p>
+                      </div>
 
-                      <p
-                        aria-live="polite"
-                        className={styles.copyTemplateStatus}
-                      >
-                        {copyTemplateStatus}
-                      </p>
+                      <textarea
+                        aria-label="Template email to representative"
+                        readOnly
+                        value={representativeEmailTemplate}
+                      />
                     </div>
-                  </div>
-                </details>
+                  </details>
+                </div>
               </div>
             </div>
           </aside>
