@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SharePageButton } from "./_components/share-page-button";
 import { StateVoteSummary } from "./_components/state-vote-summary";
 import styles from "./page.module.css";
@@ -42,9 +41,6 @@ export default function Home() {
           >
             Contact your senators
           </a>
-          <Link className={styles.secondaryLink} href="/past-votes">
-            Past votes
-          </Link>
         </div>
       </section>
 

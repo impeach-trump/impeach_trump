@@ -318,93 +318,75 @@ export function StateVoteSummary() {
   }
 
   return (
-    <section className={styles.section} aria-labelledby="your-state">
-      <div className={styles.sectionHeader}>
-        <div>
-          <h2 id="your-state">Your state</h2>
-        </div>
-
-        <label className={styles.stateSelect}>
-          <span>State</span>
-          <select
-            value={selectedState}
-            onChange={(event) => handleStateChange(event.target.value)}
-          >
-            <option value="">Choose a state</option>
-            {usRegions.map((region) => (
-              <option key={region.code} value={region.code}>
-                {region.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className={styles.zipLookup}>
-        <div className={styles.zipLookupText}>
-          <h3>Find your House representative</h3>
-          <p>Enter your ZIP code to look up a possible House representative.</p>
-        </div>
-
-        <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
-          <label className={styles.zipInputGroup} htmlFor="zip-lookup">
-            <span>ZIP code</span>
-            <input
-              autoComplete="postal-code"
-              id="zip-lookup"
-              inputMode="numeric"
-              maxLength={10}
-              name="zip"
-              onChange={(event) => setZipInput(event.target.value)}
-              pattern="[0-9]{5}"
-              placeholder="98101"
-              type="text"
-              value={zipInput}
-            />
-          </label>
-
-          <button
-            className={styles.zipLookupButton}
-            disabled={isLookingUpZip}
-            type="submit"
-          >
-            {isLookingUpZip ? "Looking up..." : "Look up"}
-          </button>
-
-          {zipLookupMessage ? (
-            <p
-              aria-live="polite"
-              className={
-                zipLookupHasError
-                  ? `${styles.zipLookupMessage} ${styles.zipLookupError}`
-                  : styles.zipLookupMessage
-              }
-            >
-              {zipLookupMessage}
-              {showOfficialZipLookupLink ? (
-                <>
-                  {" "}
-                  Try the{" "}
-                  <a
-                    href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    official House lookup
-                  </a>
-                  .
-                </>
-              ) : null}
+    <section className={styles.section} aria-labelledby="representative-lookup">
+      <div className={styles.zipLookupCard}>
+        <div className={styles.zipLookup}>
+          <div className={styles.zipLookupText}>
+            <h2 id="representative-lookup">Find your House representative</h2>
+            <p>
+              Enter your ZIP code to look up a possible House representative.
             </p>
-          ) : null}
-        </form>
-      </div>
+          </div>
 
-      {displayedRepresentative ? (
-        <aside
-          className={representativeCardClassName}
-          aria-labelledby="possible-representative"
-        >
+          <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
+            <label className={styles.zipInputGroup} htmlFor="zip-lookup">
+              <span>ZIP code</span>
+              <input
+                autoComplete="postal-code"
+                id="zip-lookup"
+                inputMode="numeric"
+                maxLength={10}
+                name="zip"
+                onChange={(event) => setZipInput(event.target.value)}
+                pattern="[0-9]{5}"
+                placeholder="98101"
+                type="text"
+                value={zipInput}
+              />
+            </label>
+
+            <button
+              className={styles.zipLookupButton}
+              disabled={isLookingUpZip}
+              type="submit"
+            >
+              {isLookingUpZip ? "Looking up..." : "Look up"}
+            </button>
+
+            {zipLookupMessage ? (
+              <p
+                aria-live="polite"
+                className={
+                  zipLookupHasError
+                    ? `${styles.zipLookupMessage} ${styles.zipLookupError}`
+                    : styles.zipLookupMessage
+                }
+              >
+                {zipLookupMessage}
+                {showOfficialZipLookupLink ? (
+                  <>
+                    {" "}
+                    Try the{" "}
+                    <a
+                      href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      official House lookup
+                    </a>
+                    .
+                  </>
+                ) : null}
+              </p>
+            ) : null}
+          </form>
+        </div>
+
+        {displayedRepresentative ? (
+          <aside
+            className={representativeCardClassName}
+            aria-labelledby="possible-representative"
+          >
           <div className={styles.representativeCardTop}>
             <div>
               <p className={styles.meta}>Based on your ZIP lookup</p>
@@ -477,151 +459,186 @@ export function StateVoteSummary() {
             </div>
           </div>
         </aside>
-      ) : null}
+        ) : null}
+      </div>
 
-      {selectedState ? (
-        <div className={styles.stateGrid}>
-          <section className={styles.memberPanel} aria-labelledby="house-votes">
-            <h3 id="house-votes">House members from {selectedStateName}</h3>
+      <div className={styles.stateGrid}>
+        <section className={styles.memberPanel} aria-labelledby="your-state">
+          <div className={styles.statePanelHeader}>
+            <div>
+              <h2 id="your-state">Your state</h2>
+            </div>
 
-            <div className={styles.voteGroups}>
-              {votesForState.map(({ vote, members }) => (
-                <article className={styles.voteGroup} key={vote.id}>
-                  <div className={styles.voteGroupHeader}>
-                    <div>
-                      <p className={styles.meta}>{vote.displayDate}</p>
-                      <h4>
-                        Roll Call {vote.rollCallNumber} · {vote.resolution}
-                      </h4>
-                      <p>
-                        {vote.voteQuestion} · {vote.result}
-                      </p>
+            <label className={styles.stateSelect}>
+              <span>State</span>
+              <select
+                value={selectedState}
+                onChange={(event) => handleStateChange(event.target.value)}
+              >
+                <option value="">Choose a state</option>
+                {usRegions.map((region) => (
+                  <option key={region.code} value={region.code}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className={styles.panelDivider} />
+
+          {selectedState ? (
+            <>
+              <h3 id="house-votes">House members from {selectedStateName}</h3>
+              <div className={styles.voteGroups}>
+                {votesForState.map(({ vote, members }) => (
+                  <article className={styles.voteGroup} key={vote.id}>
+                    <div className={styles.voteGroupHeader}>
+                      <div>
+                        <p className={styles.meta}>{vote.displayDate}</p>
+                        <h4>
+                          <a
+                            href={vote.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Roll Call {vote.rollCallNumber} ·{" "}
+                            {vote.resolution}
+                          </a>
+                        </h4>
+                        <p>
+                          {vote.voteQuestion} - {vote.result}
+                        </p>
+                        <p>
+                          {vote.shortExplanation}
+                        </p>
+                      </div>
                     </div>
-                    <a
-                      href={vote.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Official source
-                    </a>
-                  </div>
 
-                  {members.length > 0 ? (
-                    <div className={styles.tableWrap}>
-                      <table className={styles.memberTable}>
-                        <thead>
-                          <tr>
-                            <th scope="col">Member</th>
-                            <th scope="col">Contact</th>
-                            <th scope="col">Position</th>
-                            <th scope="col">Party</th>
-                            <th scope="col">Official vote</th>
-                            <th scope="col">Helped impeachment move forward?</th>
-                            <th scope="col">Donors</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {members.map((memberVote) => {
-                            const votedToImpeach =
-                              interpretVote(
-                                memberVote.rawVote,
-                                vote.voteQuestion,
-                              ) === IMPEACHMENT_SUPPORT;
-                            const memberName =
-                              memberFullNamesById[memberVote.memberId] ??
-                              memberVote.name;
-                            const contactUrl =
-                              contactUrlByRepresentative[
-                                getRepresentativeContactKey(
-                                  memberName,
-                                  memberVote.party,
-                                )
-                              ];
-                            const contactHref =
-                              contactUrl ?? OFFICIAL_REPRESENTATIVE_LOOKUP_URL;
-                            const mpid =
-                              openSecretsIdsByMemberId[memberVote.memberId];
-                            const openSecretsUrl = mpid
-                              ? `https://www.opensecrets.org/profiles/_/us_congress/organizations?mpid=${mpid}`
-                              : "";
+                    {members.length > 0 ? (
+                      <div className={styles.tableWrap}>
+                        <table className={styles.memberTable}>
+                          <thead>
+                            <tr>
+                              <th scope="col">Member</th>
+                              <th scope="col">Contact</th>
+                              <th scope="col">Position</th>
+                              <th scope="col">Party</th>
+                              <th scope="col">Official vote</th>
+                              <th scope="col">
+                                Helped impeachment move forward?
+                              </th>
+                              <th scope="col">Donors</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {members.map((memberVote) => {
+                              const votedToImpeach =
+                                interpretVote(
+                                  memberVote.rawVote,
+                                  vote.voteQuestion,
+                                ) === IMPEACHMENT_SUPPORT;
+                              const memberName =
+                                memberFullNamesById[memberVote.memberId] ??
+                                memberVote.name;
+                              const contactUrl =
+                                contactUrlByRepresentative[
+                                  getRepresentativeContactKey(
+                                    memberName,
+                                    memberVote.party,
+                                  )
+                                ];
+                              const contactHref =
+                                contactUrl ??
+                                OFFICIAL_REPRESENTATIVE_LOOKUP_URL;
+                              const mpid =
+                                openSecretsIdsByMemberId[memberVote.memberId];
+                              const openSecretsUrl = mpid
+                                ? `https://www.opensecrets.org/profiles/_/us_congress/organizations?mpid=${mpid}`
+                                : "";
 
-                            return (
-                              <tr
-                                className={
-                                  votedToImpeach
-                                    ? styles.impeachYesRow
-                                    : styles.impeachNoRow
-                                }
-                                key={`${vote.id}-${memberVote.memberId}`}
-                              >
-                                <td data-label="Member">{memberName}</td>
-                                <td data-label="Contact">
-                                  <a
-                                    aria-label={
-                                      contactUrl
-                                        ? `Contact ${memberName}`
-                                        : `Find official contact information for ${memberName}`
-                                    }
-                                    className={styles.contactLink}
-                                    href={contactHref}
-                                    rel="noopener noreferrer"
-                                    target="_blank"
-                                  >
-                                    {contactUrl ? "Contact" : "Find contact"}
-                                  </a>
-                                </td>
-                                <td data-label="Position">
-                                  {getPosition(vote.chamber)}
-                                </td>
-                                <td data-label="Party">{memberVote.party}</td>
-                                <td data-label="Official vote">
-                                  {memberVote.rawVote}
-                                </td>
-                                <td data-label="Helped impeachment move forward?">
-                                  <span className={styles.impeachStatus}>
-                                    {votedToImpeach ? <CheckIcon /> : <XIcon />}
-                                    {votedToImpeach ? "Yes" : "No"}
-                                  </span>
-                                </td>
-                                <td data-label="Donors">
-                                  {openSecretsUrl ? (
+                              return (
+                                <tr
+                                  className={
+                                    votedToImpeach
+                                      ? styles.impeachYesRow
+                                      : styles.impeachNoRow
+                                  }
+                                  key={`${vote.id}-${memberVote.memberId}`}
+                                >
+                                  <td data-label="Member">{memberName}</td>
+                                  <td data-label="Contact">
                                     <a
-                                      aria-label={`View funding sources for ${memberName} on OpenSecrets`}
-                                      className={styles.donorLink}
-                                      href={openSecretsUrl}
+                                      aria-label={
+                                        contactUrl
+                                          ? `Contact ${memberName}`
+                                          : `Find official contact information for ${memberName}`
+                                      }
+                                      className={styles.contactLink}
+                                      href={contactHref}
                                       rel="noopener noreferrer"
                                       target="_blank"
                                     >
-                                      Funding sources
+                                      {contactUrl ? "Contact" : "Find contact"}
                                     </a>
-                                  ) : (
-                                    <span className={styles.unavailable}>
-                                      Not listed
+                                  </td>
+                                  <td data-label="Position">
+                                    {getPosition(vote.chamber)}
+                                  </td>
+                                  <td data-label="Party">{memberVote.party}</td>
+                                  <td data-label="Official vote">
+                                    {memberVote.rawVote}
+                                  </td>
+                                  <td data-label="Helped impeachment move forward?">
+                                    <span className={styles.impeachStatus}>
+                                      {votedToImpeach ? (
+                                        <CheckIcon />
+                                      ) : (
+                                        <XIcon />
+                                      )}
+                                      {votedToImpeach ? "Yes" : "No"}
                                     </span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className={styles.emptyState}>
-                      No House vote records for this state in this roll call.
-                    </p>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
-        </div>
-      ) : (
-        <p className={styles.emptyState}>
-          Select a state to see member-level vote records from the tracked House
-          roll calls.
-        </p>
-      )}
+                                  </td>
+                                  <td data-label="Donors">
+                                    {openSecretsUrl ? (
+                                      <a
+                                        aria-label={`View funding sources for ${memberName} on OpenSecrets`}
+                                        className={styles.donorLink}
+                                        href={openSecretsUrl}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                      >
+                                        Funding sources
+                                      </a>
+                                    ) : (
+                                      <span className={styles.unavailable}>
+                                        Not listed
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className={styles.emptyState}>
+                        No House vote records for this state in this roll call.
+                      </p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className={styles.emptyState}>
+              Select a state to see member-level vote records from the tracked
+              House roll calls.
+            </p>
+          )}
+        </section>
+      </div>
     </section>
   );
 }

@@ -73,8 +73,7 @@
 }
 
 .ctaButton,
-.ctaLink,
-.secondaryLink {
+.ctaLink {
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid var(--border);
@@ -94,13 +93,9 @@
   cursor: pointer;
 }
 
-.secondaryLink {
-  color: var(--muted);
-}
-
 .ctaButton:hover,
 .ctaLink:hover,
-.secondaryLink:hover {
+.voteGroupHeader h4 a:hover {
   text-decoration-thickness: 2px;
 }
 
@@ -129,15 +124,21 @@
   gap: 16px;
 }
 
+.zipLookupCard {
+  display: grid;
+  gap: 18px;
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
 .zipLookup {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
 }
 
 .zipLookupText {
@@ -220,9 +221,9 @@
 .representativeCard {
   display: grid;
   gap: 16px;
+  margin: 0 -18px -18px;
   padding: 18px;
-  border: 1px solid #b7d0eb;
-  border-radius: 8px;
+  border-top: 1px solid #b7d0eb;
   background: #edf6ff;
 }
 
@@ -415,16 +416,25 @@
   background: var(--surface);
 }
 
+.statePanelHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.panelDivider {
+  border-top: 1px solid var(--border);
+}
+
 .voteGroup {
   padding: 16px;
   background: #fbfcfd;
 }
 
 .voteGroupHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  gap: 6px;
 }
 
 .voteGroupHeader h4 {
@@ -438,10 +448,9 @@
   line-height: 1.5;
 }
 
-.voteGroupHeader a {
-  flex-shrink: 0;
+.voteGroupHeader h4 a {
   color: var(--link);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .tableWrap {
@@ -534,42 +543,6 @@
   white-space: nowrap;
 }
 
-.voteList {
-  display: grid;
-  gap: 14px;
-}
-
-.voteCard {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.voteCard h3 {
-  margin-bottom: 8px;
-  font-size: 1.05rem;
-}
-
-.voteCard p {
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.voteCard a {
-  flex-shrink: 0;
-  color: var(--link);
-  font-weight: 700;
-}
-
-.voteCard a:hover {
-  text-decoration-thickness: 2px;
-}
-
 @media (max-width: 900px) {
   .tableWrap {
     overflow-x: visible;
@@ -628,7 +601,7 @@
   }
 
   .sectionHeader,
-  .voteGroupHeader,
+  .statePanelHeader,
   .zipLookup,
   .representativeCardTop {
     display: grid;
@@ -656,9 +629,6 @@
     align-items: flex-start;
   }
 
-  .voteCard {
-    display: grid;
-  }
 }
 
 @media (max-width: 460px) {
