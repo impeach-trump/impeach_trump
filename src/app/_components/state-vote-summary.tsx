@@ -580,156 +580,174 @@ export function StateVoteSummary() {
               <h3 id="house-votes">House members from {selectedStateName}</h3>
               <div className={styles.voteGroups}>
                 {votesForState.map(({ vote, members }) => (
-                  <article className={styles.voteGroup} key={vote.id}>
-                    <div className={styles.voteGroupHeader}>
-                      <div>
-                        <p className={styles.meta}>{vote.displayDate}</p>
-                        <h4>
-                          <a
-                            href={vote.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Roll Call {vote.rollCallNumber} ·{" "}
-                            {vote.resolution}
-                          </a>
-                        </h4>
-                        <p>
+                  <details className={styles.voteAccordion} key={vote.id}>
+                    <summary className={styles.voteAccordionSummary}>
+                      <span className={styles.voteAccordionSummaryText}>
+                        <span className={styles.meta}>
+                          {vote.displayDate}
+                        </span>
+                        <span className={styles.voteAccordionTitle}>
+                          Roll Call {vote.rollCallNumber} · {vote.resolution}
+                        </span>
+                        <span className={styles.voteAccordionResult}>
                           {vote.voteQuestion} - {vote.result}
-                        </p>
-                        <p>
-                          {vote.shortExplanation}
-                        </p>
-                      </div>
-                    </div>
+                        </span>
+                      </span>
+                    </summary>
 
-                    {members.length > 0 ? (
-                      <div className={styles.tableWrap}>
-                        <table className={styles.memberTable}>
-                          <thead>
-                            <tr>
-                              <th scope="col">Member</th>
-                              <th scope="col">Contact</th>
-                              <th scope="col">Position</th>
-                              <th scope="col">Party</th>
-                              <th scope="col">Official vote</th>
-                              <th scope="col">
-                                Helped impeachment move forward?
-                              </th>
-                              <th scope="col">Donors</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {members.map((memberVote) => {
-                              const votedToImpeach =
-                                interpretVote(
-                                  memberVote.rawVote,
-                                  vote.voteQuestion,
-                                ) === IMPEACHMENT_SUPPORT;
-                              const memberName =
-                                memberFullNamesById[memberVote.memberId] ??
-                                memberVote.name;
-                              const contactUrl =
-                                contactUrlByRepresentative[
-                                  getRepresentativeContactKey(
-                                    memberName,
-                                    memberVote.party,
-                                  )
-                                ];
-                              const contactHref =
-                                contactUrl ??
-                                OFFICIAL_REPRESENTATIVE_LOOKUP_URL;
-                              const mpid =
-                                openSecretsIdsByMemberId[memberVote.memberId];
-                              const openSecretsUrl = mpid
-                                ? `https://www.opensecrets.org/profiles/_/us_congress/organizations?mpid=${mpid}`
-                                : "";
+                    <div className={styles.voteAccordionBody}>
+                      <p className={styles.voteExplanation}>
+                        {vote.shortExplanation}
+                      </p>
 
-                              return (
-                                <tr
-                                  className={
-                                    votedToImpeach
-                                      ? styles.impeachYesRow
-                                      : styles.impeachNoRow
-                                  }
-                                  key={`${vote.id}-${memberVote.memberId}`}
-                                >
-                                  <td data-label="Member">{memberName}</td>
-                                  <td data-label="Contact">
-                                    <a
-                                      aria-label={
-                                        contactUrl
-                                          ? `Contact ${memberName}`
-                                          : `Find official contact information for ${memberName}`
-                                      }
-                                      className={styles.contactLink}
-                                      href={contactHref}
-                                      rel="noopener noreferrer"
-                                      target="_blank"
-                                    >
-                                      <Mail
-                                        aria-hidden="true"
-                                        className={styles.linkIcon}
-                                      />
-                                      {contactUrl ? "Contact" : "Find contact"}
-                                    </a>
-                                  </td>
-                                  <td data-label="Position">
-                                    {getPosition(vote.chamber)}
-                                  </td>
-                                  <td data-label="Party">{memberVote.party}</td>
-                                  <td data-label="Official vote">
-                                    {memberVote.rawVote}
-                                  </td>
-                                  <td data-label="Helped impeachment move forward?">
-                                    <span className={styles.impeachStatus}>
-                                      {votedToImpeach ? (
-                                        <Check
-                                          aria-hidden="true"
-                                          className={styles.impeachIcon}
-                                        />
-                                      ) : (
-                                        <X
-                                          aria-hidden="true"
-                                          className={styles.impeachIcon}
-                                        />
-                                      )}
-                                      {votedToImpeach ? "Yes" : "No"}
-                                    </span>
-                                  </td>
-                                  <td data-label="Donors">
-                                    {openSecretsUrl ? (
+                      <a
+                        className={styles.voteAccordionSource}
+                        href={vote.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Official source
+                        <ExternalLink
+                          aria-hidden="true"
+                          className={styles.inlineIcon}
+                        />
+                      </a>
+
+                      {members.length > 0 ? (
+                        <div className={styles.tableWrap}>
+                          <table className={styles.memberTable}>
+                            <thead>
+                              <tr>
+                                <th scope="col">Member</th>
+                                <th scope="col">Contact</th>
+                                <th scope="col">Position</th>
+                                <th scope="col">Party</th>
+                                <th scope="col">Official vote</th>
+                                <th scope="col">
+                                  Helped impeachment move forward?
+                                </th>
+                                <th scope="col">Donors</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {members.map((memberVote) => {
+                                const votedToImpeach =
+                                  interpretVote(
+                                    memberVote.rawVote,
+                                    vote.voteQuestion,
+                                  ) === IMPEACHMENT_SUPPORT;
+                                const memberName =
+                                  memberFullNamesById[memberVote.memberId] ??
+                                  memberVote.name;
+                                const contactUrl =
+                                  contactUrlByRepresentative[
+                                    getRepresentativeContactKey(
+                                      memberName,
+                                      memberVote.party,
+                                    )
+                                  ];
+                                const contactHref =
+                                  contactUrl ??
+                                  OFFICIAL_REPRESENTATIVE_LOOKUP_URL;
+                                const mpid =
+                                  openSecretsIdsByMemberId[
+                                    memberVote.memberId
+                                  ];
+                                const openSecretsUrl = mpid
+                                  ? `https://www.opensecrets.org/profiles/_/us_congress/organizations?mpid=${mpid}`
+                                  : "";
+
+                                return (
+                                  <tr
+                                    className={
+                                      votedToImpeach
+                                        ? styles.impeachYesRow
+                                        : styles.impeachNoRow
+                                    }
+                                    key={`${vote.id}-${memberVote.memberId}`}
+                                  >
+                                    <td data-label="Member">{memberName}</td>
+                                    <td data-label="Contact">
                                       <a
-                                        aria-label={`View funding sources for ${memberName} on OpenSecrets`}
-                                        className={styles.donorLink}
-                                        href={openSecretsUrl}
+                                        aria-label={
+                                          contactUrl
+                                            ? `Contact ${memberName}`
+                                            : `Find official contact information for ${memberName}`
+                                        }
+                                        className={styles.contactLink}
+                                        href={contactHref}
                                         rel="noopener noreferrer"
                                         target="_blank"
                                       >
-                                        <ExternalLink
+                                        <Mail
                                           aria-hidden="true"
                                           className={styles.linkIcon}
                                         />
-                                        Funding sources
+                                        {contactUrl
+                                          ? "Contact"
+                                          : "Find contact"}
                                       </a>
-                                    ) : (
-                                      <span className={styles.unavailable}>
-                                        Not listed
+                                    </td>
+                                    <td data-label="Position">
+                                      {getPosition(vote.chamber)}
+                                    </td>
+                                    <td data-label="Party">
+                                      {memberVote.party}
+                                    </td>
+                                    <td data-label="Official vote">
+                                      {memberVote.rawVote}
+                                    </td>
+                                    <td data-label="Helped impeachment move forward?">
+                                      <span className={styles.impeachStatus}>
+                                        {votedToImpeach ? (
+                                          <Check
+                                            aria-hidden="true"
+                                            className={styles.impeachIcon}
+                                          />
+                                        ) : (
+                                          <X
+                                            aria-hidden="true"
+                                            className={styles.impeachIcon}
+                                          />
+                                        )}
+                                        {votedToImpeach ? "Yes" : "No"}
                                       </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className={styles.emptyState}>
-                        No House vote records for this state in this roll call.
-                      </p>
-                    )}
-                  </article>
+                                    </td>
+                                    <td data-label="Donors">
+                                      {openSecretsUrl ? (
+                                        <a
+                                          aria-label={`View funding sources for ${memberName} on OpenSecrets`}
+                                          className={styles.donorLink}
+                                          href={openSecretsUrl}
+                                          rel="noopener noreferrer"
+                                          target="_blank"
+                                        >
+                                          <ExternalLink
+                                            aria-hidden="true"
+                                            className={styles.linkIcon}
+                                          />
+                                          Funding sources
+                                        </a>
+                                      ) : (
+                                        <span className={styles.unavailable}>
+                                          Not listed
+                                        </span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className={styles.emptyState}>
+                          No House vote records for this state in this roll
+                          call.
+                        </p>
+                      )}
+                    </div>
+                  </details>
                 ))}
               </div>
             </>
