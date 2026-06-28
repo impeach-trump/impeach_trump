@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   Copy,
   ExternalLink,
   Landmark,
@@ -26,6 +27,7 @@ import { memberFullNamesById } from "@/data/memberNames";
 import { getRegionName, usRegions } from "@/data/states";
 import { memberVotesByVoteId, voteMetadata } from "@/data/votes";
 import type { MemberVoteRecord } from "@/data/types";
+import { trackGaEvent } from "../_lib/ga-events";
 import { SharePageButton } from "./share-page-button";
 import styles from "../page.module.css";
 
@@ -139,14 +141,12 @@ type RepresentativeVoteStatus = {
 };
 type ActionStepKey =
   | "findRepresentative"
-  | "reviewVotes"
   | "keepPressure"
   | "voteMidterms";
 
 const INITIAL_ACTION_STEPS: Record<ActionStepKey, boolean> = {
   findRepresentative: true,
   keepPressure: false,
-  reviewVotes: false,
   voteMidterms: false,
 };
 const POLLING_PLACE_LOOKUP_URL = "https://www.usa.gov/find-polling-place";
@@ -241,6 +241,20 @@ function getRepresentativeState(representative: PossibleRepresentative) {
   );
 }
 
+function getVoteAnalyticsStatus(voteStatus: RepresentativeVoteStatus | null) {
+  if (!voteStatus) {
+    return "unknown";
+  }
+
+  return voteStatus.helpedImpeachmentMoveForward
+    ? "helped_impeachment"
+    : "blocked_impeachment";
+}
+
+function getVoteAnalyticsStatusFromSupport(helpedImpeachment: boolean) {
+  return helpedImpeachment ? "helped_impeachment" : "blocked_impeachment";
+}
+
 function getPosition(chamber: string) {
   return chamber.toLowerCase().includes("senate") ? "Senate" : "House";
 }
@@ -329,6 +343,9 @@ export function StateVoteSummary() {
   }, [selectedState]);
 
   function handleStateChange(value: string) {
+    trackGaEvent("state_select_change", {
+      state: value || "cleared",
+    });
     selectState(value);
   }
 
@@ -348,6 +365,12 @@ export function StateVoteSummary() {
   ) {
     const isOpen = event.currentTarget.open;
 
+    if (isOpen) {
+      trackGaEvent("action_step_expand", {
+        step,
+      });
+    }
+
     setOpenActionSteps((currentSteps) =>
       currentSteps[step] === isOpen
         ? currentSteps
@@ -356,6 +379,7 @@ export function StateVoteSummary() {
   }
 
   function handleRepresentativeBack() {
+    trackGaEvent("zip_lookup_back_click");
     setManualRepresentative(null);
     setCopyTemplateStatus("");
   }
@@ -364,13 +388,21 @@ export function StateVoteSummary() {
     event.preventDefault();
 
     const zipCode = normalizeZipInput(zipInput);
+    const hasValidZip = /^\d{5}$/.test(zipCode);
     setCopyTemplateStatus("");
 
-    if (!/^\d{5}$/.test(zipCode)) {
+    trackGaEvent("zip_lookup_click", {
+      valid_zip: hasValidZip,
+    });
+
+    if (!hasValidZip) {
       setManualRepresentative(null);
       setZipLookupHasError(true);
       setShowOfficialZipLookupLink(false);
       setZipLookupMessage("Enter a valid 5-digit ZIP code.");
+      trackGaEvent("zip_lookup_result", {
+        result: "invalid",
+      });
       return;
     }
 
@@ -390,6 +422,9 @@ export function StateVoteSummary() {
         setZipLookupHasError(true);
         setShowOfficialZipLookupLink(result.status === "not_found");
         setZipLookupMessage(result.message);
+        trackGaEvent("zip_lookup_result", {
+          result: result.status,
+        });
         return;
       }
 
@@ -397,15 +432,24 @@ export function StateVoteSummary() {
         ...result.representative,
       });
       const representativeState = getRepresentativeState(result.representative);
+      const lookupVoteStatus = getLatestRepresentativeVoteStatus(
+        result.representative,
+      );
 
       if (representativeState) {
         selectState(representativeState);
       }
 
+      trackGaEvent("zip_lookup_result", {
+        party: result.representative.party,
+        result: "found",
+        state: representativeState || "unknown",
+        vote_status: getVoteAnalyticsStatus(lookupVoteStatus),
+      });
+
       setOpenActionSteps((currentSteps) => ({
         ...currentSteps,
         findRepresentative: true,
-        reviewVotes: true,
       }));
       setShowOfficialZipLookupLink(false);
       setZipLookupMessage("");
@@ -414,23 +458,55 @@ export function StateVoteSummary() {
       setZipLookupHasError(true);
       setShowOfficialZipLookupLink(false);
       setZipLookupMessage("Could not look up that ZIP right now.");
+      trackGaEvent("zip_lookup_result", {
+        result: "error",
+      });
     } finally {
       setIsLookingUpZip(false);
     }
   }
 
   async function handleCopyTemplate() {
+    trackGaEvent("copy_message_click", {
+      source: "lookup_result",
+      vote_status: getVoteAnalyticsStatus(representativeVoteStatus),
+    });
+
     if (!navigator.clipboard?.writeText) {
       setCopyTemplateStatus("Copy is not available in this browser.");
+      trackGaEvent("copy_message_result", {
+        result: "unavailable",
+      });
       return;
     }
 
     try {
       await navigator.clipboard.writeText(representativeEmailTemplate);
       setCopyTemplateStatus("Template copied.");
+      trackGaEvent("copy_message_result", {
+        result: "copied",
+      });
     } catch {
       setCopyTemplateStatus("Copy failed.");
+      trackGaEvent("copy_message_result", {
+        result: "failed",
+      });
     }
+  }
+
+  function handleLookupContactClick() {
+    if (!displayedRepresentative) {
+      return;
+    }
+
+    trackGaEvent("contact_representative_click", {
+      has_direct_contact: true,
+      party: displayedRepresentative.party,
+      source: "lookup_result",
+      state:
+        selectedState || getRepresentativeState(displayedRepresentative) || "",
+      vote_status: getVoteAnalyticsStatus(representativeVoteStatus),
+    });
   }
 
   return (
@@ -463,6 +539,7 @@ export function StateVoteSummary() {
                 a copy-ready message.
               </span>
             </span>
+            <ChevronDown aria-hidden="true" className={styles.summaryIcon} />
           </summary>
 
           <div className={styles.actionStepBody}>
@@ -527,6 +604,11 @@ export function StateVoteSummary() {
                           <a
                             className={styles.officialLookupLink}
                             href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                            onClick={() =>
+                              trackGaEvent("official_lookup_click", {
+                                source: "zip_form",
+                              })
+                            }
                             rel="noopener noreferrer"
                             tabIndex={inactiveSearchTabIndex}
                             target="_blank"
@@ -555,6 +637,11 @@ export function StateVoteSummary() {
                                 Try the{" "}
                                 <a
                                   href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                                  onClick={() =>
+                                    trackGaEvent("official_lookup_click", {
+                                      source: "zip_no_match_message",
+                                    })
+                                  }
                                   rel="noopener noreferrer"
                                   tabIndex={inactiveSearchTabIndex}
                                   target="_blank"
@@ -637,6 +724,7 @@ export function StateVoteSummary() {
                                 <a
                                   className={styles.representativeLink}
                                   href={displayedRepresentative.contactUrl}
+                                  onClick={handleLookupContactClick}
                                   rel="noopener noreferrer"
                                   target="_blank"
                                 >
@@ -660,6 +748,10 @@ export function StateVoteSummary() {
                                       />
                                       Quick copy email template
                                     </span>
+                                    <ChevronDown
+                                      aria-hidden="true"
+                                      className={styles.summaryIcon}
+                                    />
                                   </summary>
 
                                   <div className={styles.copyTemplateBody}>
@@ -726,6 +818,7 @@ export function StateVoteSummary() {
                 contact senators too.
               </span>
             </span>
+            <ChevronDown aria-hidden="true" className={styles.summaryIcon} />
           </summary>
 
           <div className={styles.actionStepBody}>
@@ -734,6 +827,7 @@ export function StateVoteSummary() {
               <a
                 className={styles.ctaLink}
                 href="https://vote.gov/"
+                onClick={() => trackGaEvent("register_to_vote_click")}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -743,6 +837,7 @@ export function StateVoteSummary() {
               <a
                 className={styles.ctaLink}
                 href="https://www.senate.gov/senators/senators-contact.htm"
+                onClick={() => trackGaEvent("senator_contact_click")}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -769,6 +864,7 @@ export function StateVoteSummary() {
                 2026. Find your polling place and make a plan to vote.
               </span>
             </span>
+            <ChevronDown aria-hidden="true" className={styles.summaryIcon} />
           </summary>
 
           <div className={styles.actionStepBody}>
@@ -776,6 +872,7 @@ export function StateVoteSummary() {
               <a
                 className={styles.ctaLink}
                 href={POLLING_PLACE_LOOKUP_URL}
+                onClick={() => trackGaEvent("find_polling_place_click")}
                 rel="noopener noreferrer"
                 target="_blank"
               >
@@ -783,28 +880,33 @@ export function StateVoteSummary() {
                 Find where to vote
               </a>
             </div>
+
+            <details className={styles.processAccordion}>
+              <summary>
+                <span>How impeachment works</span>
+                <ChevronDown aria-hidden="true" className={styles.summaryIcon} />
+              </summary>
+              <ol>
+                <li>House members introduce and vote on impeachment articles.</li>
+                <li>A House majority can impeach and send the case to the Senate.</li>
+                <li>The Senate holds a trial and votes on whether to convict.</li>
+              </ol>
+            </details>
           </div>
         </details>
 
-        <details
-          className={styles.actionStep}
-          onToggle={(event) => handleActionStepToggle("reviewVotes", event)}
-          open={openActionSteps.reviewVotes}
-        >
-          <summary className={styles.actionStepSummary}>
-            <span className={styles.actionStepNumber}>Step 4</span>
-            <span className={styles.actionStepSummaryText}>
-              <span className={styles.actionStepTitle}>
-                Check the House vote record
-              </span>
-              <span className={styles.actionStepDescription}>
-                Pick a state to review the two tracked roll-call records.
-              </span>
-            </span>
-          </summary>
+      </div>
 
-          <div className={styles.actionStepBody}>
-            <div className={styles.stateGrid}>
+      <section
+        className={styles.voteRecordSection}
+        aria-labelledby="vote-record-title"
+      >
+        <div className={styles.voteRecordHeader}>
+          <h2 id="vote-record-title">Track House vote records</h2>
+          <p>Pick a state to review the two tracked roll-call records.</p>
+        </div>
+
+        <div className={styles.stateGrid}>
         <section
           className={styles.memberPanel}
           aria-label="State House vote records"
@@ -833,7 +935,19 @@ export function StateVoteSummary() {
               <h3 id="house-votes">House members from {selectedStateName}</h3>
               <div className={styles.voteGroups}>
                 {votesForState.map(({ vote, members }) => (
-                  <details className={styles.voteAccordion} key={vote.id}>
+                  <details
+                    className={styles.voteAccordion}
+                    key={vote.id}
+                    onToggle={(event) => {
+                      if (event.currentTarget.open) {
+                        trackGaEvent("vote_record_expand", {
+                          roll_call: vote.rollCallNumber,
+                          state: selectedState,
+                          vote_id: vote.id,
+                        });
+                      }
+                    }}
+                  >
                     <summary className={styles.voteAccordionSummary}>
                       <span className={styles.voteAccordionSummaryText}>
                         <span className={styles.meta}>
@@ -846,6 +960,10 @@ export function StateVoteSummary() {
                           {vote.voteQuestion} - {vote.result}
                         </span>
                       </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={styles.summaryIcon}
+                      />
                     </summary>
 
                     <div className={styles.voteAccordionBody}>
@@ -856,6 +974,13 @@ export function StateVoteSummary() {
                       <a
                         className={styles.voteAccordionSource}
                         href={vote.sourceUrl}
+                        onClick={() =>
+                          trackGaEvent("official_source_click", {
+                            roll_call: vote.rollCallNumber,
+                            state: selectedState,
+                            vote_id: vote.id,
+                          })
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -929,6 +1054,23 @@ export function StateVoteSummary() {
                                         }
                                         className={styles.contactLink}
                                         href={contactHref}
+                                        onClick={() =>
+                                          trackGaEvent(
+                                            "contact_representative_click",
+                                            {
+                                              has_direct_contact:
+                                                Boolean(contactUrl),
+                                              party: memberVote.party,
+                                              source: "vote_table",
+                                              state: memberVote.state,
+                                              vote_id: vote.id,
+                                              vote_status:
+                                                getVoteAnalyticsStatusFromSupport(
+                                                  votedToImpeach,
+                                                ),
+                                            },
+                                          )
+                                        }
                                         rel="noopener noreferrer"
                                         target="_blank"
                                       >
@@ -972,6 +1114,17 @@ export function StateVoteSummary() {
                                           aria-label={`View funding sources for ${memberName} on OpenSecrets`}
                                           className={styles.donorLink}
                                           href={openSecretsUrl}
+                                          onClick={() =>
+                                            trackGaEvent("donor_link_click", {
+                                              party: memberVote.party,
+                                              state: memberVote.state,
+                                              vote_id: vote.id,
+                                              vote_status:
+                                                getVoteAnalyticsStatusFromSupport(
+                                                  votedToImpeach,
+                                                ),
+                                            })
+                                          }
                                           rel="noopener noreferrer"
                                           target="_blank"
                                         >
@@ -1012,9 +1165,7 @@ export function StateVoteSummary() {
           )}
               </section>
             </div>
-          </div>
-        </details>
-      </div>
+      </section>
     </section>
   );
 }

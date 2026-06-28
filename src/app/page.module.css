@@ -4,6 +4,7 @@
   min-width: 0;
   margin: 0 auto;
   padding: 0 24px 64px;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -19,18 +20,6 @@
   border: 0;
 }
 
-.hero {
-  display: grid;
-  gap: 22px;
-  padding-top: 40px;
-  border-top: 1px solid var(--border);
-}
-
-.heroCopy {
-  display: grid;
-  gap: 14px;
-}
-
 .kicker,
 .meta {
   color: var(--muted);
@@ -39,24 +28,11 @@
   text-transform: uppercase;
 }
 
-.siteTitle {
-  max-width: 720px;
-  color: var(--foreground);
-  font-size: 1.35rem;
-  line-height: 1.2;
-  font-weight: 800;
-}
-
-.heroCopy p {
-  max-width: 720px;
-  color: var(--muted);
-  font-size: 1.08rem;
-  line-height: 1.55;
-}
-
 .section {
   display: grid;
   gap: 18px;
+  max-width: 100%;
+  min-width: 0;
   padding: 40px 0;
 }
 
@@ -106,6 +82,36 @@
   min-width: 0;
 }
 
+.voteRecordSection {
+  display: grid;
+  gap: 16px;
+  max-width: 100%;
+  min-width: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.voteRecordHeader {
+  display: grid;
+  gap: 6px;
+  max-width: 720px;
+  min-width: 0;
+}
+
+.voteRecordHeader h2 {
+  color: var(--foreground);
+  font-size: 1.18rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.voteRecordHeader p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .actionStep {
   display: grid;
   max-width: 100%;
@@ -133,20 +139,8 @@
 }
 
 .actionStepSummary::after {
-  content: "+";
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-left: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fbfcfd;
-  color: var(--link);
-  font-size: 1.05rem;
-  font-weight: 900;
-  line-height: 1;
+  content: none;
+  display: none;
 }
 
 .actionStep[open] .actionStepSummary {
@@ -154,7 +148,7 @@
 }
 
 .actionStep[open] .actionStepSummary::after {
-  content: "-";
+  content: none;
 }
 
 .actionStepNumber {
@@ -212,6 +206,8 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .sectionHeader p {
@@ -229,7 +225,8 @@
 .processAccordion,
 .mobileActionMenu {
   display: grid;
-  max-width: 720px;
+  max-width: min(100%, 720px);
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -245,6 +242,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  max-width: 100%;
+  min-width: 0;
   min-height: 44px;
   padding: 10px 12px;
   cursor: pointer;
@@ -268,14 +267,25 @@
   transition: transform 160ms ease;
 }
 
+.actionStepSummary > .summaryIcon,
+.copyTemplate summary > .summaryIcon,
+.voteAccordionSummary > .summaryIcon {
+  margin-left: auto;
+}
+
 .processAccordion[open] .summaryIcon,
-.mobileActionMenu[open] .summaryIcon {
+.mobileActionMenu[open] .summaryIcon,
+.actionStep[open] > .actionStepSummary .summaryIcon,
+.copyTemplate[open] > summary .summaryIcon,
+.voteAccordion[open] > .voteAccordionSummary .summaryIcon {
   transform: rotate(180deg);
 }
 
 .processAccordion ol {
   display: grid;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   padding: 0 14px 14px 32px;
   color: var(--muted);
   font-size: 0.95rem;
@@ -285,6 +295,8 @@
 .mobileActionBody {
   display: grid;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   padding: 0 12px 12px;
 }
 
@@ -293,6 +305,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 8px;
   max-width: 100%;
   min-width: 0;
@@ -306,6 +319,8 @@
   line-height: 1.2;
   overflow-wrap: anywhere;
   text-align: center;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .ctaButton,
@@ -351,7 +366,8 @@
 .stateSelect {
   display: grid;
   gap: 8px;
-  min-width: 220px;
+  max-width: 100%;
+  min-width: 0;
   width: min(100%, 340px);
   color: var(--foreground);
   font-size: 0.9rem;
@@ -526,6 +542,7 @@
 .officialLookupLink {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
   max-width: 100%;
   min-width: 0;
@@ -534,6 +551,8 @@
   font-weight: 700;
   line-height: 1.35;
   overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .officialLookupLink:hover {
@@ -732,6 +751,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
   max-width: 100%;
   min-width: 0;
@@ -742,6 +762,8 @@
   font-weight: 800;
   line-height: 1.2;
   overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .representativeLink:hover {
@@ -779,8 +801,10 @@
 .copyTemplateSummaryLabel {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
+  word-break: break-word;
 }
 
 .copyTemplate summary::marker,
@@ -789,21 +813,12 @@
 }
 
 .copyTemplate summary::after {
-  content: "+";
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid #82add8;
-  border-radius: 999px;
-  background: #edf6ff;
-  color: #143f67;
-  font-weight: 900;
+  content: none;
+  display: none;
 }
 
 .copyTemplate[open] summary::after {
-  content: "-";
+  content: none;
 }
 
 .copyTemplate[open] summary {
@@ -912,20 +927,8 @@
 }
 
 .voteAccordionSummary::after {
-  content: "+";
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-top: 2px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--link);
-  font-size: 1.05rem;
-  font-weight: 900;
-  line-height: 1;
+  content: none;
+  display: none;
 }
 
 .voteAccordion[open] .voteAccordionSummary {
@@ -933,7 +936,7 @@
 }
 
 .voteAccordion[open] .voteAccordionSummary::after {
-  content: "-";
+  content: none;
 }
 
 .voteAccordionSummaryText,
@@ -969,14 +972,16 @@
 .voteAccordionSource {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 2px;
-  width: max-content;
+  width: auto;
   max-width: 100%;
   min-width: 0;
   color: var(--link);
   font-weight: 800;
   line-height: 1.3;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tableWrap {
@@ -1066,11 +1071,13 @@
 .impeachStatus {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   max-width: 100%;
   min-width: 0;
   font-weight: 800;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .impeachYesRow .impeachStatus {
@@ -1099,6 +1106,7 @@
 .donorLink {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   max-width: 100%;
   min-width: 0;
@@ -1106,6 +1114,7 @@
   font-weight: 800;
   overflow-wrap: anywhere;
   white-space: normal;
+  word-break: break-word;
 }
 
 .contactLink:hover,
@@ -1181,27 +1190,9 @@
 @media (max-width: 680px) {
   .page {
     width: 100%;
-    padding: 0 14px 28px;
-  }
-
-  .hero {
-    gap: 12px;
-    padding-top: 24px;
-  }
-
-  .heroCopy {
-    justify-items: center;
-    gap: 8px;
-    text-align: center;
-  }
-
-  .heroCopy p {
-    max-width: 36rem;
-    font-size: 0.98rem;
-  }
-
-  .siteTitle {
-    font-size: 1.08rem;
+    padding: 0 10px 28px;
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .ctaGroup {
@@ -1250,12 +1241,16 @@
   }
 
   .actionStepSummary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
     gap: 10px;
   }
 
   .actionStepSummary::after {
     width: 32px;
     height: 32px;
+    margin-left: 0;
   }
 
   .lookupCta {
@@ -1282,6 +1277,18 @@
   .voteAccordionSummary,
   .voteAccordionBody {
     padding: 14px;
+  }
+
+  .copyTemplate summary,
+  .voteAccordionSummary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .copyTemplate summary::after,
+  .voteAccordionSummary::after {
+    margin-left: 0;
   }
 
   .representativeCard {
@@ -1328,11 +1335,27 @@
   }
 
   .representativeVoteCallout {
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     width: 100%;
   }
 
+  .zipResultToolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .zipResultMeta {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .memberTable td {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
 }
 
 @media (max-width: 460px) {
@@ -1343,5 +1366,21 @@
   .memberTable td {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .page {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .actionStepSummary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .actionStepNumber {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }

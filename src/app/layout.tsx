@@ -1,6 +1,8 @@
-import { Analytics } from "@vercel/analytics/next"
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GA_MEASUREMENT_ID } from "./_lib/ga-config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +40,7 @@ export default function RootLayout({
           </p>
         </footer>
         <Analytics />
+        {GA_MEASUREMENT_ID ? <GoogleAnalytics gaId={GA_MEASUREMENT_ID} /> : null}
       </body>
     </html>
   );
