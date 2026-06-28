@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import {
+  type FormEvent,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import houseMemberOpenSecretsIds from "@/data/houseMemberOpenSecretsIds.json";
 import { interpretVote } from "@/data/interpretVote";
 import { memberFullNamesById } from "@/data/memberNames";
@@ -10,11 +15,42 @@ import type { MemberVoteRecord } from "@/data/types";
 import styles from "../page.module.css";
 
 const DETECTED_STATE_COOKIE = "detected_state";
+const DETECTED_REP_COOKIE_PREFIX = "detected_rep_";
 const SELECTED_STATE_STORAGE_KEY = "selected_state";
 const voteRecordsById: Record<string, MemberVoteRecord[]> = memberVotesByVoteId;
 const openSecretsIdsByMemberId: Record<string, string> =
   houseMemberOpenSecretsIds;
 const IMPEACHMENT_SUPPORT = "Voted to advance impeachment";
+const OFFICIAL_REPRESENTATIVE_LOOKUP_URL =
+  "https://www.house.gov/representatives/find-your-representative";
+const REPRESENTATIVE_EMAIL_TEMPLATE = [
+  `I\u2019m a constituent in your district, and I am absolutely disappointed\u2014and frankly angry\u2014about your vote on Roll Call 175 / H. Res. 537. By voting to table the resolution, you actively helped block the impeachment process from moving forward. It is a joke that Donald Trump has not been held fully accountable by this body. Hiding behind a procedural vote to shut this down instead of facing it head-on is cowardly.`,
+  `The legal and constitutional grounds for his impeachment are overwhelming. We are talking about severe, documented violations of his oath of office, including:`,
+  `Abuse of Power: Repeatedly weaponizing the presidency for personal and political gain, including pressuring government officials to interfere in our democratic processes.`,
+  `Obstruction of Congress and Justice: Systematically directing officials to defy lawful congressional subpoenas, withholding evidence, and interfering with federal investigations.`,
+  `Subversion of Democracy: Actively attempting to overturn lawful election results and inciting efforts to disrupt the peaceful transfer of power.`,
+  `Constitutional Violations: Flagrantly ignoring the Emoluments Clause and profiting off the office of the presidency.`,
+  `None of these are trivial political disagreements\u2014they are the textbook definition of "high crimes and misdemeanors." I want Donald Trump impeached. I expect Congress to take constitutional accountability seriously instead of shutting it down procedurally to protect him. Your job is to defend the Constitution, not play political defense. I pay attention to how you vote, and I will be remembering Roll Call 175 at the ballot box. I expect a real explanation for this vote, not a canned newsletter response.`,
+].join("\n\n");
+
+type PossibleRepresentative = {
+  contactUrl: string;
+  geoid: string;
+  name: string;
+  party: string;
+  source: "detected" | "manual";
+  zipCode: string;
+};
+
+type ZipLookupResponse =
+  | {
+      representative: Omit<PossibleRepresentative, "source">;
+      status: "found";
+    }
+  | {
+      message: string;
+      status: "invalid" | "not_found";
+    };
 
 function CheckIcon() {
   return (
@@ -59,7 +95,7 @@ function readCookie(name: string) {
     .split("; ")
     .find((part) => part.startsWith(`${name}=`));
 
-  return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
+  return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : "";
 }
 
 function readStoredOrDetectedState() {
@@ -69,14 +105,55 @@ function readStoredOrDetectedState() {
   );
 }
 
+function readDetectedRepresentative(): PossibleRepresentative | null {
+  const zipCode = readCookie(`${DETECTED_REP_COOKIE_PREFIX}zip`);
+  const geoid = readCookie(`${DETECTED_REP_COOKIE_PREFIX}geoid`);
+  const name = readCookie(`${DETECTED_REP_COOKIE_PREFIX}name`);
+  const party = readCookie(`${DETECTED_REP_COOKIE_PREFIX}party`);
+  const contactUrl = readCookie(`${DETECTED_REP_COOKIE_PREFIX}contact_url`);
+
+  if (!zipCode || !geoid || !name || !contactUrl) {
+    return null;
+  }
+
+  return {
+    contactUrl,
+    geoid,
+    name,
+    party,
+    source: "detected",
+    zipCode,
+  };
+}
+
+function normalizeZipInput(value: string) {
+  return value.replace(/\D/g, "").slice(0, 5);
+}
+
 export function StateVoteSummary() {
   const [chosenState, setChosenState] = useState<string | null>(null);
+  const [zipInput, setZipInput] = useState("");
+  const [manualRepresentative, setManualRepresentative] =
+    useState<PossibleRepresentative | null>(null);
+  const [zipLookupMessage, setZipLookupMessage] = useState("");
+  const [zipLookupHasError, setZipLookupHasError] = useState(false);
+  const [showOfficialZipLookupLink, setShowOfficialZipLookupLink] =
+    useState(false);
+  const [isLookingUpZip, setIsLookingUpZip] = useState(false);
+  const [copyTemplateStatus, setCopyTemplateStatus] = useState("");
   const storedOrDetectedState = useSyncExternalStore(
     subscribeToBrowserState,
     readStoredOrDetectedState,
     getServerSnapshot,
   );
+  const possibleRepresentative = useSyncExternalStore(
+    subscribeToBrowserState,
+    readDetectedRepresentative,
+    () => null,
+  );
   const selectedState = chosenState ?? storedOrDetectedState;
+  const displayedRepresentative =
+    manualRepresentative ?? possibleRepresentative;
 
   const selectedStateName = selectedState ? getRegionName(selectedState) : "";
 
@@ -103,6 +180,69 @@ export function StateVoteSummary() {
     }
   }
 
+  async function handleZipLookup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const zipCode = normalizeZipInput(zipInput);
+    setCopyTemplateStatus("");
+
+    if (!/^\d{5}$/.test(zipCode)) {
+      setManualRepresentative(null);
+      setZipLookupHasError(true);
+      setShowOfficialZipLookupLink(false);
+      setZipLookupMessage("Enter a valid 5-digit ZIP code.");
+      return;
+    }
+
+    setIsLookingUpZip(true);
+    setZipLookupHasError(false);
+    setShowOfficialZipLookupLink(false);
+    setZipLookupMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/representative-by-zip?zip=${encodeURIComponent(zipCode)}`,
+      );
+      const result = (await response.json()) as ZipLookupResponse;
+
+      if (result.status !== "found") {
+        setManualRepresentative(null);
+        setZipLookupHasError(true);
+        setShowOfficialZipLookupLink(result.status === "not_found");
+        setZipLookupMessage(result.message);
+        return;
+      }
+
+      setManualRepresentative({
+        ...result.representative,
+        source: "manual",
+      });
+      setShowOfficialZipLookupLink(false);
+      setZipLookupMessage(`Showing possible representative for ZIP ${zipCode}.`);
+    } catch {
+      setManualRepresentative(null);
+      setZipLookupHasError(true);
+      setShowOfficialZipLookupLink(false);
+      setZipLookupMessage("Could not look up that ZIP right now.");
+    } finally {
+      setIsLookingUpZip(false);
+    }
+  }
+
+  async function handleCopyTemplate() {
+    if (!navigator.clipboard?.writeText) {
+      setCopyTemplateStatus("Copy is not available in this browser.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(REPRESENTATIVE_EMAIL_TEMPLATE);
+      setCopyTemplateStatus("Template copied.");
+    } catch {
+      setCopyTemplateStatus("Copy failed.");
+    }
+  }
+
   return (
     <section className={styles.section} aria-labelledby="your-state">
       <div className={styles.sectionHeader}>
@@ -125,6 +265,142 @@ export function StateVoteSummary() {
           </select>
         </label>
       </div>
+
+      <div className={styles.zipLookup}>
+        <div className={styles.zipLookupText}>
+          <h3>Find your House representative</h3>
+          <p>
+            {possibleRepresentative
+              ? "Auto-detection can be imprecise. Enter a ZIP code to check another district."
+              : "ZIP was not auto-detected. Enter yours to look up a possible House representative."}
+          </p>
+        </div>
+
+        <form className={styles.zipLookupForm} onSubmit={handleZipLookup}>
+          <label className={styles.zipInputGroup} htmlFor="zip-lookup">
+            <span>ZIP code</span>
+            <input
+              autoComplete="postal-code"
+              id="zip-lookup"
+              inputMode="numeric"
+              maxLength={10}
+              name="zip"
+              onChange={(event) => setZipInput(event.target.value)}
+              pattern="[0-9]{5}"
+              placeholder="98101"
+              type="text"
+              value={zipInput}
+            />
+          </label>
+
+          <button
+            className={styles.zipLookupButton}
+            disabled={isLookingUpZip}
+            type="submit"
+          >
+            {isLookingUpZip ? "Looking up..." : "Look up"}
+          </button>
+
+          {zipLookupMessage ? (
+            <p
+              aria-live="polite"
+              className={
+                zipLookupHasError
+                  ? `${styles.zipLookupMessage} ${styles.zipLookupError}`
+                  : styles.zipLookupMessage
+              }
+            >
+              {zipLookupMessage}
+              {showOfficialZipLookupLink ? (
+                <>
+                  {" "}
+                  Try the{" "}
+                  <a
+                    href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    official House lookup
+                  </a>
+                  .
+                </>
+              ) : null}
+            </p>
+          ) : null}
+        </form>
+      </div>
+
+      {displayedRepresentative ? (
+        <aside
+          className={styles.representativeCard}
+          aria-labelledby="possible-representative"
+        >
+          <div className={styles.representativeCardTop}>
+            <div>
+              <p className={styles.meta}>
+                {displayedRepresentative.source === "manual"
+                  ? "Based on your ZIP lookup"
+                  : "Based on detected ZIP code"}
+              </p>
+              <h3 id="possible-representative">
+                {displayedRepresentative.name} may be your House representative
+              </h3>
+              <p>
+                This match may be inaccurate because ZIP codes can cross House
+                districts. Confirm your representative on the{" "}
+                <a
+                  href={OFFICIAL_REPRESENTATIVE_LOOKUP_URL}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  official House lookup
+                </a>{" "}
+                before relying on this result.
+              </p>
+            </div>
+
+            <a
+              className={styles.representativeLink}
+              href={displayedRepresentative.contactUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Contact {displayedRepresentative.name}
+            </a>
+          </div>
+
+          <details className={styles.copyTemplate}>
+            <summary>
+              <span>Quick copy template</span>
+              <span className={styles.copyTemplateHint}>
+                Roll Call 175 / H. Res. 537
+              </span>
+            </summary>
+
+            <div className={styles.copyTemplateBody}>
+              <textarea
+                aria-label="Template email to representative"
+                readOnly
+                value={REPRESENTATIVE_EMAIL_TEMPLATE}
+              />
+
+              <div className={styles.copyTemplateActions}>
+                <button
+                  className={styles.copyTemplateButton}
+                  onClick={handleCopyTemplate}
+                  type="button"
+                >
+                  Copy message
+                </button>
+
+                <p aria-live="polite" className={styles.copyTemplateStatus}>
+                  {copyTemplateStatus}
+                </p>
+              </div>
+            </div>
+          </details>
+        </aside>
+      ) : null}
 
       {selectedState ? (
         <div className={styles.stateGrid}>

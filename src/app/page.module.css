@@ -129,6 +129,237 @@
   gap: 16px;
 }
 
+.zipLookup {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.zipLookupText {
+  display: grid;
+  gap: 6px;
+}
+
+.zipLookupText p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.zipLookupForm {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.zipInputGroup {
+  display: grid;
+  gap: 8px;
+  min-width: 160px;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.zipInputGroup input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.zipLookupButton {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--foreground);
+  color: var(--background);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.zipLookupButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.zipLookupMessage {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.zipLookupMessage a {
+  color: var(--link);
+  font-weight: 800;
+}
+
+.zipLookupError {
+  color: #a41e1e;
+}
+
+.zipLookupError a {
+  color: #7b1616;
+}
+
+.representativeCard {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #b7d0eb;
+  border-radius: 8px;
+  background: #edf6ff;
+}
+
+.representativeCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.representativeCard h3 {
+  margin: 6px 0;
+  font-size: 1.05rem;
+}
+
+.representativeCard p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.representativeCard p a {
+  color: var(--link);
+  font-weight: 800;
+}
+
+.representativeCard p a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.representativeLink {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid #9bbfe3;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--link);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.representativeLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.copyTemplate {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid #cbe0f5;
+  padding-top: 14px;
+}
+
+.copyTemplate summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--foreground);
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.copyTemplate summary::marker,
+.copyTemplate summary::-webkit-details-marker {
+  display: none;
+}
+
+.copyTemplate summary::after {
+  content: "+";
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #9bbfe3;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--link);
+  font-weight: 900;
+}
+
+.copyTemplate[open] summary::after {
+  content: "-";
+}
+
+.copyTemplateHint {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.copyTemplateBody {
+  display: grid;
+  gap: 10px;
+}
+
+.copyTemplateBody textarea {
+  width: 100%;
+  min-height: 260px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #b7d0eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.copyTemplateActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.copyTemplateButton {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid #9bbfe3;
+  border-radius: 8px;
+  background: var(--foreground);
+  color: var(--background);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.copyTemplateStatus {
+  min-height: 1.4em;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
 .memberPanel,
 .voteGroup {
   display: grid;
@@ -350,12 +581,32 @@
   }
 
   .sectionHeader,
-  .voteGroupHeader {
+  .voteGroupHeader,
+  .zipLookup,
+  .representativeCardTop {
     display: grid;
   }
 
-  .stateSelect {
+  .stateSelect,
+  .zipLookupForm {
     min-width: 0;
+  }
+
+  .zipLookupForm {
+    justify-content: stretch;
+    max-width: none;
+  }
+
+  .zipInputGroup {
+    flex: 1 1 180px;
+  }
+
+  .copyTemplate summary {
+    align-items: flex-start;
+  }
+
+  .copyTemplateHint {
+    margin-left: 0;
   }
 
   .voteCard {
@@ -364,6 +615,16 @@
 }
 
 @media (max-width: 460px) {
+  .copyTemplateActions,
+  .copyTemplate summary {
+    display: grid;
+  }
+
+  .copyTemplate summary::after {
+    grid-row: 1;
+    justify-self: start;
+  }
+
   .memberTable td {
     grid-template-columns: 1fr;
     gap: 4px;
